@@ -149,37 +149,37 @@ local rhpCategory = Settings.RegisterCanvasLayoutCategory(rhpOptionsPanel, "Rand
 local rhpTitle = CreateFrame("Frame", nil, rhpOptionsPanel)
 -- rhpDesc: 设置面板描述文字
 local rhpDesc = CreateFrame("Frame", nil, rhpOptionsPanel)
--- rhpOptionsScroll: 可滚动的玩具复选框列表区域
+-- rhpOptionsScroll: 全面板可滚动区域，包含所有选项控件
 local rhpOptionsScroll = CreateFrame("ScrollFrame", nil, rhpOptionsPanel, "UIPanelScrollFrameTemplate")
--- rhpDivider: 滚动列表上方的分割线
+-- rhpDivider: 不再使用（分割线由布局间距替代）
 local rhpDivider = rhpOptionsScroll:CreateLine()
--- rhpScrollChild: 滚动区域的子框架，所有复选框挂载在此
+-- rhpScrollChild: 滚动区域的子框架，所有选项控件挂载在此以实现统一滚动
 local rhpScrollChild = CreateFrame("Frame")
 -- rhpSelectAll / rhpDeselectAll: "全选"和"全部取消"按钮
-local rhpSelectAll = CreateFrame("Button", nil, rhpOptionsScroll, "UIPanelButtonTemplate")
-local rhpDeselectAll = CreateFrame("Button", nil, rhpOptionsScroll, "UIPanelButtonTemplate")
+local rhpSelectAll = CreateFrame("Button", nil, rhpScrollChild, "UIPanelButtonTemplate")
+local rhpDeselectAll = CreateFrame("Button", nil, rhpScrollChild, "UIPanelButtonTemplate")
 -- rhpOverride: "仅允许当前盟约炉石"复选框
-local rhpOverride = CreateFrame("CheckButton", nil, rhpOptionsScroll, "UICheckButtonTemplate")
+local rhpOverride = CreateFrame("CheckButton", nil, rhpScrollChild, "UICheckButtonTemplate")
 -- rhpListener: 事件监听框架，处理 ADDON_LOADED / PLAYER_ENTERING_WORLD 等事件
 local rhpListener = CreateFrame("Frame")
 -- rhpBtn: 安全动作按钮（SecureActionButton），承载所有修饰键绑定和点击逻辑
 -- 全局名称 "rhpB" 用于宏中的 /click 命令引用
 local rhpBtn = CreateFrame("Button", "rhpB", nil, "SecureActionButtonTemplate")
 -- rhpDropdown: 宏图标选择下拉菜单
-local rhpDropdown = CreateFrame("DropdownButton", nil, rhpOptionsPanel, "WowStyle1DropdownTemplate")
+local rhpDropdown = CreateFrame("DropdownButton", nil, rhpScrollChild, "WowStyle1DropdownTemplate")
 -- rhpDalHearth: "右键点击使用达拉然炉石"复选框
-local rhpDalHearth = CreateFrame("CheckButton", nil, rhpOptionsPanel, "UICheckButtonTemplate")
+local rhpDalHearth = CreateFrame("CheckButton", nil, rhpScrollChild, "UICheckButtonTemplate")
 -- rhpGarHearth: "中键点击使用要塞炉石"复选框
-local rhpGarHearth = CreateFrame("CheckButton", nil, rhpOptionsPanel, "UICheckButtonTemplate")
+local rhpGarHearth = CreateFrame("CheckButton", nil, rhpScrollChild, "UICheckButtonTemplate")
 -- rhpMacroName: 自定义宏名称输入框
-local rhpMacroName = CreateFrame("EditBox", nil, rhpOptionsPanel, "InputBoxTemplate")
+local rhpMacroName = CreateFrame("EditBox", nil, rhpScrollChild, "InputBoxTemplate")
 
 -- ========== 修饰键绑定区域（3×3 下拉菜单网格）==========
 -- rhpModDropdowns[mod][btn]: 存储每个修饰键+按键组合对应的下拉菜单引用
 --   例如 rhpModDropdowns["SHIFT"]["1"] 对应 Shift+左键的下拉菜单
 local rhpModDropdowns = {}
 -- rhpModSectionLabel: "修饰键绑定"区域标题
-local rhpModSectionLabel = CreateFrame("Frame", nil, rhpOptionsPanel)
+local rhpModSectionLabel = CreateFrame("Frame", nil, rhpScrollChild)
 -- rhpModHeaders: 列标题（左键/右键/中键）框架数组
 local rhpModHeaders = {}
 -- rhpModRowLabels: 行标签（Shift/Ctrl/Alt）框架映射表
@@ -749,27 +749,23 @@ rhpDesc.Text:SetPoint("TOPLEFT", rhpDesc, 0, 0)
 rhpDesc.Text:SetText(L["DESCRIPTION"])
 
 -- ========== 滚动框架 ==========
--- 承载玩具复选框列表，可垂直滚动
+-- 全面板滚动区域：标题和描述固定在顶部，其余所有选项控件在滚动区域内
 rhpOptionsScroll:SetPoint("TOPLEFT", 5, -60)
-rhpOptionsScroll:SetPoint("BOTTOMRIGHT", -25, 150)
+rhpOptionsScroll:SetPoint("BOTTOMRIGHT", -25, 5)
 
--- ========== 分割线 ==========
--- 滚动列表上方的视觉分割线
-rhpDivider:SetStartPoint("BOTTOMLEFT", rhpDivider:GetParent(), 20, -10)
-rhpDivider:SetEndPoint("BOTTOMRIGHT", rhpDivider:GetParent(), 0, -10)
-rhpDivider:SetColorTexture(0.25, 0.25, 0.25, 1)
-rhpDivider:SetThickness(1.2)
+-- ========== 分割线（不再需要，所有内容在统一滚动区域内）==========
+rhpDivider:Hide()
 
 -- ========== 滚动子框架 ==========
--- 所有玩具复选框挂在 rhpScrollChild 上，通过滚动框架显示
+-- 所有选项控件挂载在 rhpScrollChild 上，实现统一纵向滚动
 rhpOptionsScroll:SetScrollChild(rhpScrollChild)
 rhpScrollChild:SetWidth(SettingsPanel.Container:GetWidth() - 35)
-rhpScrollChild:SetHeight(1)
+-- 高度后面会根据内容动态计算
 
 -- ========== 玩具复选框列表 ==========
 -- 为 rhToys 列表中的每个玩具创建一个复选框（CheckButton）
 -- 通过 Item:CreateFromItemID 异步加载物品名称
--- chkOffset: 累积的垂直偏移量（每个复选框间距 26 像素）
+-- chkOffset: 累积的垂直偏移量（每个复选框间距 26 像素，向下为负）
 local chkOffset = 0
 for i = 1, #rhToys do
     if i > 1 then
@@ -793,7 +789,9 @@ for i = 1, #rhToys do
 end
 
 -- ========== "全选"按钮 ==========
-rhpSelectAll:SetPoint("TOPLEFT", rhpSelectAll:GetParent(), "BOTTOMLEFT", 20, -20)
+-- 定位在最后一个玩具复选框下方
+local posY = chkOffset - 26  -- posY 从最后一个复选框继续向下累积
+rhpSelectAll:SetPoint("TOPLEFT", rhpScrollChild, "TOPLEFT", 20, posY)
 rhpSelectAll:SetSize(100, 25)
 rhpSelectAll:SetText(L["SELECT_ALL"])
 rhpSelectAll:SetScript("OnClick", function(self)
@@ -803,7 +801,7 @@ rhpSelectAll:SetScript("OnClick", function(self)
 end)
 
 -- ========== "全部取消"按钮 ==========
-rhpDeselectAll:SetPoint("TOPLEFT", rhpDeselectAll:GetParent(), "BOTTOMLEFT", 135, -20)
+rhpDeselectAll:SetPoint("TOPLEFT", rhpScrollChild, "TOPLEFT", 135, posY)
 rhpDeselectAll:SetSize(100, 25)
 rhpDeselectAll:SetText(L["DESELECT_ALL"])
 rhpDeselectAll:SetScript("OnClick", function(self)
@@ -812,8 +810,20 @@ rhpDeselectAll:SetScript("OnClick", function(self)
     end
 end)
 
--- ========== 宏图标选择下拉菜单 ==========
-rhpDropdown:SetPoint("TOPRIGHT", rhpOverride:GetParent(), "BOTTOMRIGHT", -20, -35)
+posY = posY - 35  -- 全选/取消按钮区域占 35px
+
+-- ========== 选项分隔区（与上方复选框列表的间隔）==========
+posY = posY - 15  -- 额外间距
+
+-- ========== "仅允许当前盟约炉石"复选框 ==========
+rhpOverride:SetPoint("TOPLEFT", rhpScrollChild, "TOPLEFT", 15, posY)
+rhpOverride:SetSize(25, 25)
+rhpOverride.Text:SetJustifyH("LEFT")
+rhpOverride.Text:SetText(" " .. L["COV_ONLY"])
+rhpOverride.Text:SetTextColor(1, 1, 1, 1)
+
+-- ========== 宏图标选择下拉菜单（右侧，与 Covenant 复选框同行）==========
+rhpDropdown:SetPoint("TOPRIGHT", rhpScrollChild, "TOPRIGHT", -20, posY + 5)
 rhpDropdown:SetWidth(200)
 rhpDropdown:SetDefaultText(L["RANDOM"])
 -- 下拉菜单右侧的图标预览
@@ -825,29 +835,27 @@ rhpDropdown.Extratext = rhpDropdown:CreateFontString(nil, "OVERLAY", "GameFontNo
 rhpDropdown.Extratext:SetText(L["OPT_MACRO_ICON"])
 rhpDropdown.Extratext:SetPoint("BOTTOMLEFT", rhpDropdown, "TOPLEFT", 0, 5)
 
--- ========== "仅允许当前盟约炉石"复选框 ==========
-rhpOverride:SetPoint("TOPLEFT", rhpOverride:GetParent(), "BOTTOMLEFT", 15, -50)
-rhpOverride:SetSize(25, 25)
-rhpOverride.Text:SetJustifyH("LEFT")
-rhpOverride.Text:SetText(" " .. L["COV_ONLY"])
-rhpOverride.Text:SetTextColor(1, 1, 1, 1)
+posY = posY - 26  -- Covenant 复选框行高
 
 -- ========== "右键 → 达拉然炉石"复选框 ==========
-rhpDalHearth:SetPoint("TOPLEFT", rhpOverride, "BOTTOMLEFT", 0, 0)
+rhpDalHearth:SetPoint("TOPLEFT", rhpScrollChild, "TOPLEFT", 15, posY)
 rhpDalHearth:SetSize(25, 25)
 rhpDalHearth.Text:SetJustifyH("LEFT")
 rhpDalHearth.Text:SetText(" " .. L["DAL_R_CLICK"])
 rhpDalHearth.Text:SetTextColor(1, 1, 1, 1)
 
+posY = posY - 26
+
 -- ========== "中键 → 要塞炉石"复选框 ==========
-rhpGarHearth:SetPoint("TOPLEFT", rhpDalHearth, "BOTTOMLEFT", 0, 0)
+rhpGarHearth:SetPoint("TOPLEFT", rhpScrollChild, "TOPLEFT", 15, posY)
 rhpGarHearth:SetSize(25, 25)
 rhpGarHearth.Text:SetJustifyH("LEFT")
 rhpGarHearth.Text:SetText(" " .. L["GAR_M_CLICK"])
 rhpGarHearth.Text:SetTextColor(1, 1, 1, 1)
 
 -- ========== 自定义宏名称输入框 ==========
-rhpMacroName:SetPoint("TOPLEFT", rhpDropdown, "BOTTOMLEFT", 25, -20)
+posY = posY - 30  -- 与上方 Garrison 复选框的间距
+rhpMacroName:SetPoint("TOPLEFT", rhpScrollChild, "TOPLEFT", 25, posY)
 rhpMacroName:SetAutoFocus(false)
 rhpMacroName:SetSize(208, 20)
 rhpMacroName:SetFontObject("GameFontNormal")
@@ -925,8 +933,8 @@ rhpMacroName:SetScript("OnEnterPressed", function() checkMacroName() end)
 ----------------------------------------------------------------------------------------------------------------------
 
 -- ========== 区域标题 ==========
--- 锚定到左侧的 Garrison 复选框，与上方的 Covenant/Dalaran/Garrison 选项左对齐
-rhpModSectionLabel:SetPoint("TOPLEFT", rhpGarHearth, "BOTTOMLEFT", -15, -45)
+posY = posY - 60  -- 宏名称输入框区域高度（含标签和错误提示行）+ 间距
+rhpModSectionLabel:SetPoint("TOPLEFT", rhpScrollChild, "TOPLEFT", 0, posY)
 rhpModSectionLabel:SetWidth(SettingsPanel.Container:GetWidth() - 35)
 rhpModSectionLabel:SetHeight(1)
 rhpModSectionLabel.Text = rhpModSectionLabel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
@@ -938,7 +946,7 @@ local headerLabels = { L["MOD_LEFT_CLICK"], L["MOD_RIGHT_CLICK"], L["MOD_MIDDLE_
 local headerStartX = 125     -- 第一个列标题的 X 偏移
 local headerSpacing = 160    -- 列间距
 for i, label in ipairs(headerLabels) do
-    local hdr = CreateFrame("Frame", nil, rhpOptionsPanel)
+    local hdr = CreateFrame("Frame", nil, rhpScrollChild)
     hdr:SetPoint("TOPLEFT", rhpModSectionLabel, "TOPLEFT", headerStartX + (i - 1) * headerSpacing, -25)
     hdr:SetWidth(140)
     hdr:SetHeight(1)
@@ -958,7 +966,7 @@ for modIdx, mod in ipairs(MOD_KEYS) do
     rhpModDropdowns[mod] = {}
 
     -- 行标签（Shift / Ctrl / Alt）
-    local rowLabel = CreateFrame("Frame", nil, rhpOptionsPanel)
+    local rowLabel = CreateFrame("Frame", nil, rhpScrollChild)
     rowLabel:SetPoint("TOPLEFT", rhpModSectionLabel, "TOPLEFT", 5, rowStartY + (modIdx - 1) * rowSpacing)
     rowLabel:SetWidth(110)
     rowLabel:SetHeight(1)
@@ -970,7 +978,7 @@ for modIdx, mod in ipairs(MOD_KEYS) do
 
     -- 为每个按键（左/右/中）创建下拉菜单
     for btnIdx, btn in ipairs(BTN_KEYS) do
-        local dd = CreateFrame("DropdownButton", nil, rhpOptionsPanel, "WowStyle1DropdownTemplate")
+        local dd = CreateFrame("DropdownButton", nil, rhpScrollChild, "WowStyle1DropdownTemplate")
         dd:SetPoint("TOPLEFT", rhpModSectionLabel, "TOPLEFT", headerStartX + (btnIdx - 1) * headerSpacing, rowStartY + (modIdx - 1) * rowSpacing)
         dd:SetWidth(140)
         dd:SetDefaultText(L["RANDOM"])
@@ -981,6 +989,14 @@ for modIdx, mod in ipairs(MOD_KEYS) do
         rhpModDropdowns[mod][btn] = dd
     end
 end
+
+-- ========== 计算并设置滚动子框架的总高度 ==========
+-- posY 当前指向修饰键区域标题的 Y 位置（负数，相对于 rhpScrollChild 的 TOPLEFT）
+-- 修饰键区域剩余内容：列标题(25px) + 3行下拉菜单(3×35) + 底部留白
+-- 取 posY 绝对值（已覆盖内容）+ 修饰键区域剩余 + 底部 padding
+local modRemaining = 25 + 3 * 35 + 30  -- 列标题 + 3行(Shift/Ctrl/Alt) + 底部余量
+local scrollChildHeight = (-posY) + modRemaining
+rhpScrollChild:SetHeight(scrollChildHeight)
 
 ----------------------------------------------------------------------------------------------------------------------
 -- 事件监听器（Event Listener）— 插件生命周期管理
