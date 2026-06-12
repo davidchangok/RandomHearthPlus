@@ -107,7 +107,7 @@ rhpOptionsPanel.name = "Random Hearthstone Plus"
 rhpOptionsPanel.OnCommit = function() rhpOptionsOkay(); end
 rhpOptionsPanel.OnDefault = function() rhpResetDefaults(); end
 rhpOptionsPanel.OnRefresh = function() end
-local rhpCategory, rhpLayout = Settings.RegisterCanvasLayoutCategory(rhpOptionsPanel, rhpOptionsPanel.name, rhpOptionsPanel.name)
+local rhpCategory = Settings.RegisterCanvasLayoutCategory(rhpOptionsPanel, rhpOptionsPanel.name)
 rhpCategory.ID = rhpOptionsPanel.name
 Settings.RegisterAddOnCategory(rhpCategory)
 local rhpTitle = CreateFrame("Frame", nil, rhpOptionsPanel)
