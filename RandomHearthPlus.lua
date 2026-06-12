@@ -97,11 +97,9 @@ local addon, RHP = ...
 local L = RHP.Localisation
 
 -- ========== 修饰键常量定义 ==========
--- MOD_KEYS: 三个修饰键的枚举顺序
--- MOD_ATTRS: 修饰键 → SecureActionButton 属性前缀映射（Shift → "shift", Ctrl → "ctrl", Alt → "alt"）
+-- MOD_KEYS: 三个修饰键的枚举顺序（用于遍历 modBinds 存储和 UI 下拉菜单）
 -- BTN_KEYS: 三个鼠标按键编号（1=左键, 2=右键, 3=中键）
 local MOD_KEYS = { "SHIFT", "CTRL", "ALT" }
-local MOD_ATTRS = { SHIFT = "shift", CTRL = "ctrl", ALT = "alt" }
 local BTN_KEYS = { "1", "2", "3" }
 
 -- ========== 修饰键下拉菜单选项标识符 ==========
@@ -208,88 +206,81 @@ local function deferMacroUpdate()
     end
 end
 
--- ========== 更新 SecureActionButton 的所有属性（包括修饰键绑定）==========
--- 这是本插件的核心函数之一，负责将玩家的所有绑定设置应用到安全按钮上：
---   - 左键无修饰键 → 随机炉石玩具（toy 类型）
---   - 右键无修饰键 → 达拉然炉石（如果启用）
---   - 中键无修饰键 → 要塞炉石（如果启用）
---   - 修饰键 + 按键 → 用户自定义绑定的玩具/物品
+-- ========== 根据修饰键和按键动态设置按钮动作（PreClick 模式）==========
+-- 核心问题：/click 命令不会将修饰键状态传递给 SecureActionButton 的属性系统
+-- /click [mod:shift,btn:1]rhpB 1 中的 [mod:shift] 只决定是否执行 /click，
+-- rhpB 收到的仍是普通左键点击，shift-type1/shift-toy1 属性永远不会被触发
 --
--- SecureActionButton 属性命名规则：
---   [修饰键前缀]-type[按键编号] → 动作类型（"toy" 或 "item"）
---   [修饰键前缀]-toy[按键编号]  → 玩具名称或 ItemID
---   [修饰键前缀]-item[按键编号] → 物品字符串（"item:XXXXX"）
---   无前缀 → 默认动作（"type", "toy", "item"）
-local function updateButtonAttributes()
-    -- 战斗中禁止修改安全按钮属性
-    if combatCheck() then return end
-
-    -- 默认左键动作：使用随机选中的炉石玩具
-    rhpBtn:SetAttribute("type", "toy")
-    rhpBtn:SetAttribute("toy", macroToyName)
-
-    -- 右键无修饰键 → 达拉然炉石（如果用户在设置中启用）
-    if rhpDB.settings.dalOpt then
-        rhpBtn:SetAttribute("type2", "item")
-        rhpBtn:SetAttribute("item2", "item:140192")
-    else
-        rhpBtn:SetAttribute("type2", nil)
-        rhpBtn:SetAttribute("item2", nil)
+-- 解决方案：使用 PreClick 脚本动态修改 type/toy/item 属性
+-- 在点击发生前，根据当前按下的修饰键和按键，设置对应的动作类型和参数
+-- 这样 rhpB 始终使用 "type"/"toy"/"item" 属性，但值每次动态切换
+local function rhpPreClick(self, button, isDown)
+    -- 判断当前按下的修饰键
+    local heldMod = nil
+    if IsShiftKeyDown() then
+        heldMod = "SHIFT"
+    elseif IsControlKeyDown() then
+        heldMod = "CTRL"
+    elseif IsAltKeyDown() then
+        heldMod = "ALT"
     end
 
-    -- 中键无修饰键 → 要塞炉石（如果用户在设置中启用）
-    if rhpDB.settings.garOpt then
-        rhpBtn:SetAttribute("type3", "item")
-        rhpBtn:SetAttribute("item3", "item:110560")
+    -- 将 SecureActionButton 的按钮标识（"1"/"2"/"3" 或 "LeftButton" 等）统一为 "1"/"2"/"3"
+    local btnKey
+    if button == "LeftButton" or button == "1" then
+        btnKey = "1"
+    elseif button == "RightButton" or button == "2" then
+        btnKey = "2"
+    elseif button == "MiddleButton" or button == "3" then
+        btnKey = "3"
     else
-        rhpBtn:SetAttribute("type3", nil)
-        rhpBtn:SetAttribute("item3", nil)
+        btnKey = "1"  -- 默认按左键处理
     end
 
-    -- 遍历所有修饰键×鼠标按键组合（3×3=9种），设置对应的属性
-    for _, mod in ipairs(MOD_KEYS) do
-        local modLower = MOD_ATTRS[mod]  -- "shift" / "ctrl" / "alt"
-        for _, btn in ipairs(BTN_KEYS) do
-            local v = rhpDB.settings.modBinds[mod][btn]
-            if v then
-                if type(v) == "number" then
-                    -- 绑定值为数字 → 表示一个玩具 ItemID
-                    -- 例如：shift-type1 = "toy", shift-toy1 = 253629
-                    rhpBtn:SetAttribute(modLower .. "-type" .. btn, "toy")
-                    rhpBtn:SetAttribute(modLower .. "-toy" .. btn, v)
-                    -- 清除其他动作类型的属性，避免冲突
-                    rhpBtn:SetAttribute(modLower .. "-item" .. btn, nil)
-                    rhpBtn:SetAttribute(modLower .. "-spell" .. btn, nil)
-                    rhpBtn:SetAttribute(modLower .. "-macro" .. btn, nil)
-                elseif type(v) == "string" then
-                    -- 绑定值为字符串 → 表示 "item:XXXXX" 格式的物品
-                    -- 例如：shift-type1 = "item", shift-item1 = "item:6948"
-                    rhpBtn:SetAttribute(modLower .. "-type" .. btn, "item")
-                    rhpBtn:SetAttribute(modLower .. "-item" .. btn, v)
-                    -- 清除其他动作类型的属性
-                    rhpBtn:SetAttribute(modLower .. "-toy" .. btn, nil)
-                    rhpBtn:SetAttribute(modLower .. "-spell" .. btn, nil)
-                    rhpBtn:SetAttribute(modLower .. "-macro" .. btn, nil)
-                end
-            else
-                -- 绑定值为 nil（未绑定/随机）→ 清除该组合的自定义属性
-                -- 这样点击时会穿透到基础行为（无修饰键的逻辑）
-                rhpBtn:SetAttribute(modLower .. "-type" .. btn, nil)
-                rhpBtn:SetAttribute(modLower .. "-toy" .. btn, nil)
-                rhpBtn:SetAttribute(modLower .. "-item" .. btn, nil)
+    -- 优先检查：修饰键 + 按键的自定义绑定
+    if heldMod then
+        local bindValue = rhpDB.settings.modBinds[heldMod][btnKey]
+        if bindValue then
+            if type(bindValue) == "number" then
+                -- 绑定到玩具 ItemID
+                self:SetAttribute("type", "toy")
+                self:SetAttribute("toy", bindValue)
+                return
+            elseif type(bindValue) == "string" then
+                -- 绑定到物品 "item:XXXXX"
+                self:SetAttribute("type", "item")
+                self:SetAttribute("item", bindValue)
+                return
             end
         end
     end
+
+    -- 次优先：无修饰键时，右键/中键的特殊处理
+    if not heldMod then
+        if (btnKey == "2") and rhpDB.settings.dalOpt then
+            -- 右键无修饰键 → 达拉然炉石
+            self:SetAttribute("type", "toy")
+            self:SetAttribute("toy", rhpDB.L.dalaran)
+            return
+        elseif (btnKey == "3") and rhpDB.settings.garOpt then
+            -- 中键无修饰键 → 要塞炉石
+            self:SetAttribute("type", "toy")
+            self:SetAttribute("toy", rhpDB.L.garrison)
+            return
+        end
+    end
+
+    -- 默认：使用当前随机选中的炉石玩具
+    self:SetAttribute("type", "toy")
+    self:SetAttribute("toy", macroToyName)
 end
 
 -- ========== 创建或更新全局宏 ==========
--- 生成一个包含 /click 条件跳转的宏，根据修饰键和按键将点击路由到 rhpB 安全按钮
--- 宏的条件逻辑（优先级从高到低）：
---   1. mod:shift/ctrl/alt + btn:1/2/3 → 路由到对应修饰键绑定
---   2. btn:2（右键）→ 达拉然炉石 / 要塞炉石
---   3. btn:3（中键）→ 达拉然炉石 / 要塞炉石
---   4. 默认 → 随机炉石玩具
---
+-- 生成简单的 /click 宏，仅按鼠标按键类型（左/右/中）路由到 rhpB 安全按钮
+-- 修饰键（Shift/Ctrl/Alt）由 rhpB 的 PreClick 脚本实时检测并动态路由
+--   [btn:2]rhpB 2 → 右键（PreClick 判断 Dalaran 或修饰键绑定）
+--   [btn:3]rhpB 3 → 中键（PreClick 判断 Garrison 或修饰键绑定）
+--   rhpB       → 默认左键（PreClick 判断随机玩具或修饰键绑定）
 -- 德鲁伊特殊处理：自动在宏中加入 /cancelform 以取消变形形态
 local function updateMacro()
     if not combatCheck() then
@@ -302,20 +293,22 @@ local function updateMacro()
             end
             macroText = "#showtooltip " .. macroToyName .. "\n/use " .. macroToyName
         else
-            -- 构建带修饰键路由的宏文本
-            -- /click 命令格式：[条件]按钮名称 按键编号
-            -- 条件按从左到右的优先级评估，第一个匹配的条件生效
+            -- 构建宏文本
+            -- /click 只按鼠标按键路由到 rhpB，修饰键由 PreClick 脚本动态检测
+            -- [btn:2] → 右键（路由到 PreClick 判断是 Dalaran 还是修饰键绑定）
+            -- [btn:3] → 中键（路由到 PreClick 判断是 Garrison 还是修饰键绑定）
+            -- rhpB   → 默认左键（路由到 PreClick 判断是随机玩具还是修饰键绑定）
             if playerClass == 11 then
                 -- 德鲁伊：需要 /cancelform 来在施放炉石前取消变形形态
                 macroText = "#showtooltip " .. macroToyName
                     .. "\n/cancelform"
                     .. "\n/stopcasting"
-                    .. "\n/click [mod:shift,btn:1]rhpB 1;[mod:shift,btn:2]rhpB 2;[mod:shift,btn:3]rhpB 3;[mod:ctrl,btn:1]rhpB 1;[mod:ctrl,btn:2]rhpB 2;[mod:ctrl,btn:3]rhpB 3;[mod:alt,btn:1]rhpB 1;[mod:alt,btn:2]rhpB 2;[mod:alt,btn:3]rhpB 3;[btn:2]rhpB 2;[btn:3]rhpB 3;rhpB"
+                    .. "\n/click [btn:2]rhpB 2;[btn:3]rhpB 3;rhpB"
             else
                 -- 非德鲁伊：只需要 /stopcasting
                 macroText = "#showtooltip " .. macroToyName
                     .. "\n/stopcasting"
-                    .. "\n/click [mod:shift,btn:1]rhpB 1;[mod:shift,btn:2]rhpB 2;[mod:shift,btn:3]rhpB 3;[mod:ctrl,btn:1]rhpB 1;[mod:ctrl,btn:2]rhpB 2;[mod:ctrl,btn:3]rhpB 3;[mod:alt,btn:1]rhpB 1;[mod:alt,btn:2]rhpB 2;[mod:alt,btn:3]rhpB 3;[btn:2]rhpB 2;[btn:3]rhpB 3;rhpB"
+                    .. "\n/click [btn:2]rhpB 2;[btn:3]rhpB 3;rhpB"
             end
         end
 
@@ -409,8 +402,7 @@ local function setRandom()
             macroToyName = "item:6948"
             macroIcon = 134414
         end
-        -- 更新按钮属性和宏
-        updateButtonAttributes()
+        -- PreClick 根据修饰键动态设置按钮属性，此处只需更新宏
         updateMacro()
     end
 end
@@ -683,22 +675,25 @@ end
 -- 这是整个插件的核心交互机制：
 --   - rhpB 是一个受 WoW 安全系统保护的按钮，可以在战斗中响应点击
 --   - 宏通过 /click rhpB [按键编号] 将点击路由到此按钮
---   - 按钮的属性（type, toy, item）决定了实际执行的动作
---   - PostClick 脚本在点击后触发，用于重新随机选择下一个玩具
+--   - PreClick 脚本在点击前运行，根据当前修饰键和按键动态设置 type/toy/item
+--   - PostClick 脚本在点击后运行，用于重新随机选择下一个玩具
+--   - 不使用静态的 shift-/ctrl-/alt- 前缀属性，因为 /click 不传递修饰键状态
 ----------------------------------------------------------------------------------------------------------------------
 
 -- RegisterForClicks("AnyDown"): 响应所有鼠标按键（左/右/中）的按下事件
 rhpBtn:RegisterForClicks("AnyDown")
 -- pressAndHoldAction = true: 允许按住按钮持续施放（类似原版炉石行为）
 rhpBtn:SetAttribute("pressAndHoldAction", true)
--- 默认动作类型为 "toy"（使用玩具），具体玩具名称由 updateButtonAttributes() 动态设置
-rhpBtn:SetAttribute("type", "toy")
 rhpBtn:SetAttribute("typerelease", "toy")
--- PostClick 脚本：点击后触发
+
+-- PreClick 脚本：点击前触发，根据修饰键和按键动态设置动作
+rhpBtn:SetScript("PreClick", rhpPreClick)
+
+-- PostClick 脚本：点击后触发，仅在左键无修饰键时重新随机选择下一个玩具
 rhpBtn:SetScript("PostClick", function(self, button)
     if not combatCheck() then
-        -- 仅在左键无修饰键时重新随机选择下一个玩具
-        -- 修饰键+右键/中键不应该触发随机重选
+        -- 仅在左键无修饰键时重新随机
+        -- 修饰键+右键/中键不应触发随机重选
         if button == "LeftButton" or button == "1" then
             if not IsShiftKeyDown() and not IsControlKeyDown() and not IsAltKeyDown() then
                 setRandom()
