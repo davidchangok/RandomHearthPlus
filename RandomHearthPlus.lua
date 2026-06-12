@@ -103,7 +103,13 @@ end
 -- Frames
 ----------------------------------------------------------------------------------------------------------------------
 local rhpOptionsPanel = CreateFrame("Frame")
-local rhpCategory = Settings.RegisterCanvasLayoutCategory(rhpOptionsPanel, "Random Hearthstone Plus")
+rhpOptionsPanel.name = "Random Hearthstone Plus"
+rhpOptionsPanel.OnCommit = function() rhpOptionsOkay(); end
+rhpOptionsPanel.OnDefault = function() rhpResetDefaults(); end
+rhpOptionsPanel.OnRefresh = function() end
+local rhpCategory, rhpLayout = Settings.RegisterCanvasLayoutCategory(rhpOptionsPanel, rhpOptionsPanel.name, rhpOptionsPanel.name)
+rhpCategory.ID = rhpOptionsPanel.name
+Settings.RegisterAddOnCategory(rhpCategory)
 local rhpTitle = CreateFrame("Frame", nil, rhpOptionsPanel)
 local rhpDesc = CreateFrame("Frame", nil, rhpOptionsPanel)
 local rhpOptionsScroll = CreateFrame("ScrollFrame", nil, rhpOptionsPanel, "UIPanelScrollFrameTemplate")
@@ -533,13 +539,8 @@ rhpBtn:SetScript("PostClick", function(self, button)
 end)
 
 ----------------------------------------------------------------------------------------------------------------------
--- Options Panel
+-- Options Panel Layout
 ----------------------------------------------------------------------------------------------------------------------
-rhpOptionsPanel.name = "Random Hearthstone Plus"
-rhpOptionsPanel.OnCommit = function() rhpOptionsOkay(); end
-rhpOptionsPanel.OnDefault = function() rhpResetDefaults(); end
-rhpOptionsPanel.OnRefresh = function() end
-Settings.RegisterAddOnCategory(rhpCategory)
 
 -- Title
 rhpTitle:SetPoint("TOPLEFT", 10, -10)
