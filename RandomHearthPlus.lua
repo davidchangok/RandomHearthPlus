@@ -542,9 +542,14 @@ end)
 -- Options Panel Layout
 ----------------------------------------------------------------------------------------------------------------------
 
+-- Helper: safe container width (fallback for load-order edge cases)
+local function GetContainerWidth()
+    return SettingsPanel.Container and SettingsPanel.Container:GetWidth() or 600
+end
+
 -- Title
 rhpTitle:SetPoint("TOPLEFT", 10, -10)
-rhpTitle:SetWidth(SettingsPanel.Container:GetWidth() - 35)
+rhpTitle:SetWidth(GetContainerWidth() - 35)
 rhpTitle:SetHeight(1)
 rhpTitle.Text = rhpTitle:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 rhpTitle.Text:SetPoint("TOPLEFT", rhpTitle, 0, 0)
@@ -559,7 +564,7 @@ rhpOptionsPanel.Thanks:SetJustifyH("RIGHT")
 
 -- Description
 rhpDesc:SetPoint("TOPLEFT", 20, -40)
-rhpDesc:SetWidth(SettingsPanel.Container:GetWidth() - 35)
+rhpDesc:SetWidth(GetContainerWidth() - 35)
 rhpDesc:SetHeight(1)
 rhpDesc.Text = rhpDesc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 rhpDesc.Text:SetPoint("TOPLEFT", rhpDesc, 0, 0)
@@ -577,7 +582,7 @@ rhpDivider:SetThickness(1.2)
 
 -- Scroll Frame child
 rhpOptionsScroll:SetScrollChild(rhpScrollChild)
-rhpScrollChild:SetWidth(SettingsPanel.Container:GetWidth() - 35)
+rhpScrollChild:SetWidth(GetContainerWidth() - 35)
 rhpScrollChild:SetHeight(1)
 
 -- Checkbox for each toy
@@ -708,7 +713,7 @@ rhpMacroName:SetScript("OnEnterPressed", function() checkMacroName() end)
 ----------------------------------------------------------------------------------------------------------------------
 -- Section label
 rhpModSectionLabel:SetPoint("TOPLEFT", rhpMacroName, "BOTTOMLEFT", -25, -40)
-rhpModSectionLabel:SetWidth(SettingsPanel.Container:GetWidth() - 35)
+rhpModSectionLabel:SetWidth(GetContainerWidth() - 35)
 rhpModSectionLabel:SetHeight(1)
 rhpModSectionLabel.Text = rhpModSectionLabel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 rhpModSectionLabel.Text:SetPoint("TOPLEFT", rhpModSectionLabel, 0, 0)
