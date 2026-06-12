@@ -1,141 +1,206 @@
 --[[
-
-Random Hearthstone Plus
 ======================================================================================================================================================
-Enhanced version of Random Hearthstone by JamienAU.
-Adds teleport toy support, modifier key bindings (Shift/Ctrl/Alt + click combinations), and full 12.0.5 API compatibility.
+Random Hearthstone Plus（随机炉石增强版）
+======================================================================================================================================================
+原作者 JamienAU 的 Random Hearthstone 增强版本。
+新增功能：
+  - 传送玩具支持（Teleport Toys）
+  - 修饰键绑定（Shift / Ctrl / Alt × 左键 / 右键 / 中键，共 9 种组合）
+  - 完整兼容 WoW 12.0.5 API
 
-If there's a new hearthstone or teleport toy but the addon isn't being updated, simply add it to the rhToys list below.
-ItemID can be found from the URL of the item page on Wowhead.com
+如果有新的炉石玩具或传送玩具发布，只需将其 ItemID 添加到下方的 rhToys 列表中即可。
+ItemID 可以从 Wowhead.com 物品页面的 URL 中获取（例如 item=123456 → 123456）。
 
-Weary Spirit Binding (ID: 163206) does not appear to be in-game. Adding it to the list below may cause errors!
+注意：Weary Spirit Binding（ID: 163206）似乎并未在游戏中实装。添加到列表中可能会导致错误！
 
 GitHub: https://github.com/davidchangok/RandomHearthPlus
-
+======================================================================================================================================================
 ]]
+
 ----------------------------------------------------------------------------------------------------------------------
--- Toy Database
+-- 玩具数据库（Toy Database）
+-- 所有可用的炉石玩具和传送玩具的 ItemID 列表
+-- 如需添加新玩具，只需在此列表末尾追加即可
 ----------------------------------------------------------------------------------------------------------------------
 local rhToys = {
-    -- Hearthstone Toys (original)
-    184353, -- Kyrian Hearthstone
-    183716, -- Venthyr Sinstone
-    180290, -- Night Fae Hearthstone
-    182773, -- Necrolord Hearthstone
-    54452,  -- Ethereal Portal
-    64488,  -- The Innkeeper's Daughter
-    93672,  -- Dark Portal
-    142542, -- Tome of Town Portal
-    162973, -- Greatfather Winter's Hearthstone
-    163045, -- Headless Horseman's Hearthstone
-    165669, -- Lunar Elder's Hearthstone
-    165670, -- Peddlefeet's Lovely Hearthstone
-    165802, -- Noble Gardener's Hearthstone
-    166746, -- Fire Eater's Hearthstone
-    166747, -- Brewfest Reveler's Hearthstone
-    168907, -- Holographic Digitalization Hearthstone
-    172179, -- Eternal Traveler's Hearthstone
-    193588, -- Timewalker's Hearthstone
-    188952, -- Dominated Hearthstone
-    200630, -- Ohn'ir Windsage's Hearthstone
-    190237, -- Broker Translocation Matrix
-    190196, -- Enlightened Hearthstone
-    209035, -- Hearthstone of the Flame
-    208704, -- Deepdweller's Earthen Hearthstone
-    206195, -- Path of the Naaru
-    212337, -- Stone of the Hearth
-    210455, -- Draenic Hologem
-    228940, -- Notorious Thread's Hearthstone
-    235016, -- Redeployment Module
-    236687, -- Explosive Hearthstone
-    245970, -- P.O.S.T Master's Express Hearthstone
-    246565, -- Cosmic Hearthstone
-    263489, -- Naaru's Enfold
-    257736, -- Lightcalled Hearthstone
-    265100, -- Corewarden's Hearthstone
-    263933, -- Preyseeker's Hearthstone
-    -- Teleport Toys (new)
-    253629, -- Private Key of the Arcanum
-    243056, -- Delver's Ethreal Warp Gate
-    230850, -- Delver's Robot 7001
+    -- ========== 炉石玩具（Hearthstone Toys）==========
+    184353, -- 格里恩炉石（Kyrian Hearthstone）
+    183716, -- 温西尔罪碑（Venthyr Sinstone）
+    180290, -- 法夜炉石（Night Fae Hearthstone）
+    182773, -- 通灵领主炉石（Necrolord Hearthstone）
+    54452,  -- 虚灵之门（Ethereal Portal）
+    64488,  -- 旅店老板的女儿（The Innkeeper's Daughter）
+    93672,  -- 黑暗之门（Dark Portal）
+    142542, -- 城镇传送之书（Tome of Town Portal）
+    162973, -- 冬幕节炉石（Greatfather Winter's Hearthstone）
+    163045, -- 无头骑士炉石（Headless Horseman's Hearthstone）
+    165669, -- 春节炉石（Lunar Elder's Hearthstone）
+    165670, -- 情人节炉石（Peddlefeet's Lovely Hearthstone）
+    165802, -- 贵族花园炉石（Noble Gardener's Hearthstone）
+    166746, -- 火焰节炉石（Fire Eater's Hearthstone）
+    166747, -- 美酒节炉石（Brewfest Reveler's Hearthstone）
+    168907, -- 全息数字化炉石（Holographic Digitalization Hearthstone）
+    172179, -- 永恒旅者炉石（Eternal Traveler's Hearthstone）
+    193588, -- 时光行者炉石（Timewalker's Hearthstone）
+    188952, -- 统御炉石（Dominated Hearthstone）
+    200630, -- 欧恩伊尔风语者炉石（Ohn'ir Windsage's Hearthstone）
+    190237, -- 经纪人传送矩阵（Broker Translocation Matrix）
+    190196, -- 开悟者炉石（Enlightened Hearthstone）
+    209035, -- 烈焰炉石（Hearthstone of the Flame）
+    208704, -- 深居者土灵炉石（Deepdweller's Earthen Hearthstone）
+    206195, -- 纳鲁之路（Path of the Naaru）
+    212337, -- 炉石之石（Stone of the Hearth）
+    210455, -- 德莱尼全息宝石（Draenic Hologem）
+    228940, -- 恶名线束炉石（Notorious Thread's Hearthstone）
+    235016, -- 重新部署模块（Redeployment Module）
+    236687, -- 爆炸炉石（Explosive Hearthstone）
+    245970, -- P.O.S.T 大师快递炉石（P.O.S.T Master's Express Hearthstone）
+    246565, -- 宇宙炉石（Cosmic Hearthstone）
+    263489, -- 纳鲁之拥（Naaru's Enfold）
+    257736, -- 光召炉石（Lightcalled Hearthstone）
+    265100, -- 核心守望者炉石（Corewarden's Hearthstone）
+    263933, -- 掠猎物者炉石（Preyseeker's Hearthstone）
+
+    -- ========== 传送玩具（Teleport Toys）— 新增 ==========
+    253629, -- 奥秘私钥（Private Key of the Arcanum）
+    243056, -- 探索者的虚灵跃迁门（Delver's Ethereal Warp Gate）
+    230850, -- 探索者的机器人 7001（Delver's Robot 7001）
 }
 
 ----------------------------------------------------------------------------------------------------------------------
--- DO NOT EDIT BELOW HERE
--- Unless you want to, I'm not your supervisor.
+-- 以下代码请勿修改
+-- （除非你真的想改，我又不是你老板）
 ----------------------------------------------------------------------------------------------------------------------
 
+-- ========== 全局状态变量 ==========
+-- rhpList: 当前可用的玩具ID列表（用于随机抽取）
+-- macroIcon: 宏图标ID
+-- macroToyName: 当前选中的玩具名称（用于宏的 #showtooltip）
+-- macroTimer: 防止宏重复更新的计时器标志
+-- waitTimer: 宏名称输入防抖计时器
+-- pendingMacroUpdate: 是否存在待处理的宏更新（战斗中延迟执行）
 local rhpList, macroIcon, macroToyName, macroTimer, waitTimer, pendingMacroUpdate
+
+-- rhpCheckButtons: 存储每个玩具ID对应的选项面板复选框引用
+-- wait: 是否正在等待物品数据加载完成
+-- lastRnd: 上一次随机选中的玩具ID（避免连续两次选中同一个）
+-- loginMsg: 用于追踪首次/版本升级时显示登录消息的版本标识
 local rhpCheckButtons, wait, lastRnd, loginMsg = {}, false, 0, "rhp1.0.0"
+
+-- 获取玩家职业ID（德鲁伊=11，需要特殊处理 /cancelform）
 local playerClass = select(3, UnitClass("player"))
+
+-- 插件加载入口变量
+-- addon: 插件名称 "RandomHearthPlus"
+-- RHP: 插件全局表（包含 Localisation 本地化表）
 local addon, RHP = ...
 local L = RHP.Localisation
 
--- Modifier key constants for attribute naming
+-- ========== 修饰键常量定义 ==========
+-- MOD_KEYS: 三个修饰键的枚举顺序
+-- MOD_ATTRS: 修饰键 → SecureActionButton 属性前缀映射（Shift → "shift", Ctrl → "ctrl", Alt → "alt"）
+-- BTN_KEYS: 三个鼠标按键编号（1=左键, 2=右键, 3=中键）
 local MOD_KEYS = { "SHIFT", "CTRL", "ALT" }
 local MOD_ATTRS = { SHIFT = "shift", CTRL = "ctrl", ALT = "alt" }
 local BTN_KEYS = { "1", "2", "3" }
 
--- Dropdown option identifiers (stored in dropdown:GetParent().optionValue or similar)
-local DROPDOWN_RANDOM    = "RANDOM"
-local DROPDOWN_HEARTH    = "HEARTHSTONE"
-local DROPDOWN_DALARAN   = "DALARAN"
-local DROPDOWN_GARRISON  = "GARRISON"
+-- ========== 修饰键下拉菜单选项标识符 ==========
+-- 用于判断当前选中的是哪个绑定选项
+local DROPDOWN_RANDOM    = "RANDOM"     -- 随机（跟随主行为）
+local DROPDOWN_HEARTH    = "HEARTHSTONE" -- 普通炉石（item:6948）
+local DROPDOWN_DALARAN   = "DALARAN"     -- 达拉然炉石（item:140192）
+local DROPDOWN_GARRISON  = "GARRISON"    -- 要塞炉石（item:110560）
 
--- Resolve value-to-display mapping for modifier dropdowns
+-- ========== 修饰键绑定值 → 显示名称解析函数 ==========
+-- 根据存储的绑定值（nil / item字符串 / 数字ItemID）返回对应的本地化显示文本
 local function getModBindDisplayName(value)
     if value == nil then
+        -- nil 表示"随机"，即不绑定特定物品，跟随默认行为
         return L["RANDOM"]
     elseif value == "item:6948" then
+        -- 绑定到普通炉石
         return L["HEARTHSTONE"]
     elseif value == "item:140192" then
+        -- 绑定到达拉然炉石
         return L["DALARAN_HEARTH"]
     elseif value == "item:110560" then
+        -- 绑定到要塞炉石
         return L["GARRISON_HEARTH"]
     elseif type(value) == "number" and rhpDB and rhpDB.L and rhpDB.L.tList[value] then
+        -- 绑定到某个具体玩具（数字ItemID），从数据库获取玩具名称
         return rhpDB.L.tList[value]["name"]
     else
+        -- 兜底：未知值 → 显示"随机"
         return L["RANDOM"]
     end
 end
 
 ----------------------------------------------------------------------------------------------------------------------
--- Frames
+-- 界面框架（Frames）— 创建所有 UI 控件
+-- 注意：RegisterCanvasLayoutCategory 必须在设置面板布局代码之前调用
 ----------------------------------------------------------------------------------------------------------------------
+
+-- rhpOptionsPanel: 设置面板的主框架（Canvas）
+-- rhpCategory: 设置分类注册对象，用于将面板注册到游戏的"选项 → 插件"界面
 local rhpOptionsPanel = CreateFrame("Frame")
 local rhpCategory = Settings.RegisterCanvasLayoutCategory(rhpOptionsPanel, "Random Hearthstone Plus")
+
+-- rhpTitle: 设置面板标题 "Random Hearthstone Plus"
 local rhpTitle = CreateFrame("Frame", nil, rhpOptionsPanel)
+-- rhpDesc: 设置面板描述文字
 local rhpDesc = CreateFrame("Frame", nil, rhpOptionsPanel)
+-- rhpOptionsScroll: 可滚动的玩具复选框列表区域
 local rhpOptionsScroll = CreateFrame("ScrollFrame", nil, rhpOptionsPanel, "UIPanelScrollFrameTemplate")
+-- rhpDivider: 滚动列表上方的分割线
 local rhpDivider = rhpOptionsScroll:CreateLine()
+-- rhpScrollChild: 滚动区域的子框架，所有复选框挂载在此
 local rhpScrollChild = CreateFrame("Frame")
+-- rhpSelectAll / rhpDeselectAll: "全选"和"全部取消"按钮
 local rhpSelectAll = CreateFrame("Button", nil, rhpOptionsScroll, "UIPanelButtonTemplate")
 local rhpDeselectAll = CreateFrame("Button", nil, rhpOptionsScroll, "UIPanelButtonTemplate")
+-- rhpOverride: "仅允许当前盟约炉石"复选框
 local rhpOverride = CreateFrame("CheckButton", nil, rhpOptionsScroll, "UICheckButtonTemplate")
+-- rhpListener: 事件监听框架，处理 ADDON_LOADED / PLAYER_ENTERING_WORLD 等事件
 local rhpListener = CreateFrame("Frame")
+-- rhpBtn: 安全动作按钮（SecureActionButton），承载所有修饰键绑定和点击逻辑
+-- 全局名称 "rhpB" 用于宏中的 /click 命令引用
 local rhpBtn = CreateFrame("Button", "rhpB", nil, "SecureActionButtonTemplate")
+-- rhpDropdown: 宏图标选择下拉菜单
 local rhpDropdown = CreateFrame("DropdownButton", nil, rhpOptionsPanel, "WowStyle1DropdownTemplate")
+-- rhpDalHearth: "右键点击使用达拉然炉石"复选框
 local rhpDalHearth = CreateFrame("CheckButton", nil, rhpOptionsPanel, "UICheckButtonTemplate")
+-- rhpGarHearth: "中键点击使用要塞炉石"复选框
 local rhpGarHearth = CreateFrame("CheckButton", nil, rhpOptionsPanel, "UICheckButtonTemplate")
+-- rhpMacroName: 自定义宏名称输入框
 local rhpMacroName = CreateFrame("EditBox", nil, rhpOptionsPanel, "InputBoxTemplate")
 
--- Modifier binding dropdowns (3x3 grid)
+-- ========== 修饰键绑定区域（3×3 下拉菜单网格）==========
+-- rhpModDropdowns[mod][btn]: 存储每个修饰键+按键组合对应的下拉菜单引用
+--   例如 rhpModDropdowns["SHIFT"]["1"] 对应 Shift+左键的下拉菜单
 local rhpModDropdowns = {}
+-- rhpModSectionLabel: "修饰键绑定"区域标题
 local rhpModSectionLabel = CreateFrame("Frame", nil, rhpOptionsPanel)
+-- rhpModHeaders: 列标题（左键/右键/中键）框架数组
 local rhpModHeaders = {}
+-- rhpModRowLabels: 行标签（Shift/Ctrl/Alt）框架映射表
 local rhpModRowLabels = {}
 
 ----------------------------------------------------------------------------------------------------------------------
--- Functions
+-- 功能函数（Functions）
 ----------------------------------------------------------------------------------------------------------------------
--- Combat Check
+
+-- ========== 战斗状态检测 ==========
+-- 如果玩家处于战斗中，返回 true —— 此时禁止修改宏和 SecureActionButton 属性
+-- WoW API 安全限制：战斗中无法修改受保护的 UI 元素
 local function combatCheck()
     if (InCombatLockdown() or UnitAffectingCombat("player") or UnitAffectingCombat("pet")) then
         return true
     end
 end
 
--- Defer macro update until out of combat
+-- ========== 延迟宏更新 ==========
+-- 如果当前处于战斗中，注册 PLAYER_REGEN_ENABLED 事件
+-- 在脱离战斗后立即触发挂起的宏更新
 local function deferMacroUpdate()
     if not pendingMacroUpdate then
         pendingMacroUpdate = true
@@ -143,15 +208,27 @@ local function deferMacroUpdate()
     end
 end
 
--- Update all SecureActionButton attributes including modifier bindings
+-- ========== 更新 SecureActionButton 的所有属性（包括修饰键绑定）==========
+-- 这是本插件的核心函数之一，负责将玩家的所有绑定设置应用到安全按钮上：
+--   - 左键无修饰键 → 随机炉石玩具（toy 类型）
+--   - 右键无修饰键 → 达拉然炉石（如果启用）
+--   - 中键无修饰键 → 要塞炉石（如果启用）
+--   - 修饰键 + 按键 → 用户自定义绑定的玩具/物品
+--
+-- SecureActionButton 属性命名规则：
+--   [修饰键前缀]-type[按键编号] → 动作类型（"toy" 或 "item"）
+--   [修饰键前缀]-toy[按键编号]  → 玩具名称或 ItemID
+--   [修饰键前缀]-item[按键编号] → 物品字符串（"item:XXXXX"）
+--   无前缀 → 默认动作（"type", "toy", "item"）
 local function updateButtonAttributes()
+    -- 战斗中禁止修改安全按钮属性
     if combatCheck() then return end
 
-    -- Main left-click action (random hearthstone toy)
+    -- 默认左键动作：使用随机选中的炉石玩具
     rhpBtn:SetAttribute("type", "toy")
     rhpBtn:SetAttribute("toy", macroToyName)
 
-    -- Right click without modifiers → Dalaran Hearthstone
+    -- 右键无修饰键 → 达拉然炉石（如果用户在设置中启用）
     if rhpDB.settings.dalOpt then
         rhpBtn:SetAttribute("type2", "item")
         rhpBtn:SetAttribute("item2", "item:140192")
@@ -160,7 +237,7 @@ local function updateButtonAttributes()
         rhpBtn:SetAttribute("item2", nil)
     end
 
-    -- Middle click without modifiers → Garrison Hearthstone
+    -- 中键无修饰键 → 要塞炉石（如果用户在设置中启用）
     if rhpDB.settings.garOpt then
         rhpBtn:SetAttribute("type3", "item")
         rhpBtn:SetAttribute("item3", "item:110560")
@@ -169,31 +246,34 @@ local function updateButtonAttributes()
         rhpBtn:SetAttribute("item3", nil)
     end
 
-    -- Modifier key bindings (Shift/Ctrl/Alt × Left/Right/Middle)
+    -- 遍历所有修饰键×鼠标按键组合（3×3=9种），设置对应的属性
     for _, mod in ipairs(MOD_KEYS) do
-        local modLower = MOD_ATTRS[mod]
+        local modLower = MOD_ATTRS[mod]  -- "shift" / "ctrl" / "alt"
         for _, btn in ipairs(BTN_KEYS) do
             local v = rhpDB.settings.modBinds[mod][btn]
             if v then
                 if type(v) == "number" then
-                    -- Toy item ID (e.g., shift-type1 = "toy", shift-toy1 = 253629)
+                    -- 绑定值为数字 → 表示一个玩具 ItemID
+                    -- 例如：shift-type1 = "toy", shift-toy1 = 253629
                     rhpBtn:SetAttribute(modLower .. "-type" .. btn, "toy")
                     rhpBtn:SetAttribute(modLower .. "-toy" .. btn, v)
-                    -- Clear other action attributes for this mod+btn
+                    -- 清除其他动作类型的属性，避免冲突
                     rhpBtn:SetAttribute(modLower .. "-item" .. btn, nil)
                     rhpBtn:SetAttribute(modLower .. "-spell" .. btn, nil)
                     rhpBtn:SetAttribute(modLower .. "-macro" .. btn, nil)
                 elseif type(v) == "string" then
-                    -- Item string like "item:6948" (e.g., shift-type1 = "item", shift-item1 = "item:6948")
+                    -- 绑定值为字符串 → 表示 "item:XXXXX" 格式的物品
+                    -- 例如：shift-type1 = "item", shift-item1 = "item:6948"
                     rhpBtn:SetAttribute(modLower .. "-type" .. btn, "item")
                     rhpBtn:SetAttribute(modLower .. "-item" .. btn, v)
-                    -- Clear other action attributes
+                    -- 清除其他动作类型的属性
                     rhpBtn:SetAttribute(modLower .. "-toy" .. btn, nil)
                     rhpBtn:SetAttribute(modLower .. "-spell" .. btn, nil)
                     rhpBtn:SetAttribute(modLower .. "-macro" .. btn, nil)
                 end
             else
-                -- Clear disabled binding so it falls through to base behavior
+                -- 绑定值为 nil（未绑定/随机）→ 清除该组合的自定义属性
+                -- 这样点击时会穿透到基础行为（无修饰键的逻辑）
                 rhpBtn:SetAttribute(modLower .. "-type" .. btn, nil)
                 rhpBtn:SetAttribute(modLower .. "-toy" .. btn, nil)
                 rhpBtn:SetAttribute(modLower .. "-item" .. btn, nil)
@@ -202,43 +282,62 @@ local function updateButtonAttributes()
     end
 end
 
--- Create or update global macro
+-- ========== 创建或更新全局宏 ==========
+-- 生成一个包含 /click 条件跳转的宏，根据修饰键和按键将点击路由到 rhpB 安全按钮
+-- 宏的条件逻辑（优先级从高到低）：
+--   1. mod:shift/ctrl/alt + btn:1/2/3 → 路由到对应修饰键绑定
+--   2. btn:2（右键）→ 达拉然炉石 / 要塞炉石
+--   3. btn:3（中键）→ 达拉然炉石 / 要塞炉石
+--   4. 默认 → 随机炉石玩具
+--
+-- 德鲁伊特殊处理：自动在宏中加入 /cancelform 以取消变形形态
 local function updateMacro()
     if not combatCheck() then
         local macroText
         if #rhpList == 0 then
+            -- 没有可用的炉石玩具 → 显示警告并使用普通炉石兜底
             if rhpDB.settings.warnMsg ~= true then
                 rhpDB.settings.warnMsg = true
                 print(L["NO_VALID_CHOSEN"])
             end
             macroText = "#showtooltip " .. macroToyName .. "\n/use " .. macroToyName
         else
-            -- Add cancelform to macro if player is a druid
+            -- 构建带修饰键路由的宏文本
+            -- /click 命令格式：[条件]按钮名称 按键编号
+            -- 条件按从左到右的优先级评估，第一个匹配的条件生效
             if playerClass == 11 then
+                -- 德鲁伊：需要 /cancelform 来在施放炉石前取消变形形态
                 macroText = "#showtooltip " .. macroToyName
                     .. "\n/cancelform"
                     .. "\n/stopcasting"
                     .. "\n/click [mod:shift,btn:1]rhpB 1;[mod:shift,btn:2]rhpB 2;[mod:shift,btn:3]rhpB 3;[mod:ctrl,btn:1]rhpB 1;[mod:ctrl,btn:2]rhpB 2;[mod:ctrl,btn:3]rhpB 3;[mod:alt,btn:1]rhpB 1;[mod:alt,btn:2]rhpB 2;[mod:alt,btn:3]rhpB 3;[btn:2]rhpB 2;[btn:3]rhpB 3;rhpB"
             else
+                -- 非德鲁伊：只需要 /stopcasting
                 macroText = "#showtooltip " .. macroToyName
                     .. "\n/stopcasting"
                     .. "\n/click [mod:shift,btn:1]rhpB 1;[mod:shift,btn:2]rhpB 2;[mod:shift,btn:3]rhpB 3;[mod:ctrl,btn:1]rhpB 1;[mod:ctrl,btn:2]rhpB 2;[mod:ctrl,btn:3]rhpB 3;[mod:alt,btn:1]rhpB 1;[mod:alt,btn:2]rhpB 2;[mod:alt,btn:3]rhpB 3;[btn:2]rhpB 2;[btn:3]rhpB 3;rhpB"
             end
         end
+
+        -- 使用计时器防抖，避免短时间内重复创建/编辑宏
         if macroTimer ~= true then
             macroTimer = true
             C_Timer.After(0.1, function()
+                -- 延迟回调中再次检查战斗状态
                 if combatCheck() then
                     macroTimer = false
                     deferMacroUpdate()
                     return
                 end
+                -- 查找宏是否已存在
                 local macroIndex = GetMacroIndexByName(rhpDB.settings.macroName)
                 if macroIndex == 0 then
+                    -- 宏不存在 → 创建新宏
                     print(L["MACRO_NOT_FOUND"], rhpDB.settings.macroName, "'")
                     CreateMacro(rhpDB.settings.macroName, macroIcon, macroText, nil)
                     rhpMacroName:SetText(rhpDB.settings.macroName)
                 else
+                    -- 宏已存在 → 更新其图标和内容
                     EditMacro(macroIndex, nil, macroIcon, macroText)
                 end
                 macroTimer = false
@@ -247,13 +346,17 @@ local function updateMacro()
     end
 end
 
+-- ========== 更新宏名称 ==========
+-- 用户修改宏名称输入框后调用，重命名已有宏或创建新宏
 local function updateMacroName()
     if not combatCheck() then
         local name = rhpMacroName:GetText()
         local macroIndex = GetMacroIndexByName(rhpDB.settings.macroName)
         if macroIndex == 0 then
+            -- 旧名称的宏已不存在，重新创建
             updateMacro()
         else
+            -- 重命名现有宏并保存到设置
             EditMacro(macroIndex, name)
             rhpDB.settings.macroName = name
             print(L["UPDATE_MACRO_NAME"], name, "'")
@@ -261,10 +364,15 @@ local function updateMacroName()
     end
 end
 
+-- ========== 检查宏名称有效性 ==========
+-- 在输入框失去焦点或按回车时调用
+-- 如果新名称未被占用且非空，则执行重命名
 local function checkMacroName()
     if not combatCheck() then
         local name = rhpMacroName:GetText()
+        -- 名称未变化或为空 → 不做处理
         if name == rhpDB.settings.macroName or string.len(name) == 0 then return end
+        -- 新名称未被其他宏占用 → 隐藏确认图标，执行重命名
         if GetMacroIndexByName(name) == 0 then
             rhpMacroName.Icon:Hide()
             updateMacroName()
@@ -272,47 +380,68 @@ local function checkMacroName()
     end
 end
 
--- Set random Hearthstone
+-- ========== 随机选择炉石玩具 ==========
+-- 从可用玩具列表 rhpList 中随机抽取一个
+-- 如果列表中有多个玩具，确保不会连续两次选中同一个
+-- 如果列表为空，兜底使用普通炉石（item:6948）
 local function setRandom()
     if not combatCheck() then
         if #rhpList > 0 then
+            -- 从可用列表中随机选取
             local rnd = rhpList[math.random(1, #rhpList)]
             if #rhpList > 1 then
+                -- 列表中有多个玩具时，避免连续两次选同一个
                 while rnd == lastRnd do
                     rnd = rhpList[math.random(1, #rhpList)]
                 end
                 lastRnd = rnd
             end
+            -- 设置宏显示的玩具名称
             macroToyName = rhpDB.L.tList[rnd]["name"]
+            -- 确定宏图标：如果用户选择了"随机"图标 → 使用当前玩具的图标；否则使用用户指定的图标
             if rhpDB.iconOverride.name == L["RANDOM"] then
                 macroIcon = rhpDB.L.tList[rnd]["icon"]
             else
                 macroIcon = rhpDB.iconOverride.icon
             end
         else
+            -- 没有可用玩具 → 兜底使用普通炉石（图标 134414）
             macroToyName = "item:6948"
             macroIcon = 134414
         end
+        -- 更新按钮属性和宏
         updateButtonAttributes()
         updateMacro()
     end
 end
 
--- Generate a list of valid toys
+-- ========== 生成可用玩具列表 ==========
+-- 遍历所有注册的玩具，检查以下条件：
+--   1. 用户在选项中已勾选启用（status == true）
+--   2. 玩家确实拥有该玩具（PlayerHasToy）
+--   3. 盟约炉石限制：如果不是当前盟约且不满足解锁条件，排除
+--   4. 德莱尼全息宝石（210455）：仅限德莱尼/光铸德莱尼种族
+-- 最终生成 rhpList 用于随机抽取
 local function listGenerate()
     rhpList = {}
+
+    -- allCovenant 标志：是否解锁了所有盟约炉石（成就 15241）
     local allCovenant
+    -- 盟约炉石列表：{ 成就条件索引, 盟约ID, 玩具ItemID, 是否已通过成就解锁 }
     local covenantHearths = {
-        -- { Criteria index, Covenant index, Covenant toy, Enabled }
-        { 1, 1, 184353, false }, -- Kyrian
-        { 4, 2, 183716, false }, -- Venthyr
-        { 3, 3, 180290, false }, -- Night Fae
-        { 2, 4, 182773, false }, -- Necrolord
+        { 1, 1, 184353, false }, -- 格里恩（Kyrian）
+        { 4, 2, 183716, false }, -- 温西尔（Venthyr）
+        { 3, 3, 180290, false }, -- 法夜（Night Fae）
+        { 2, 4, 182773, false }, -- 通灵领主（Necrolord）
     }
+
+    -- 检查每个盟约炉石是否通过声望成就解锁（成就 15646）
     for i, v in pairs(covenantHearths) do
         if select(3, GetAchievementCriteriaInfo(15646, v[1])) == true then
+            -- 已解锁 → 标记为可用
             covenantHearths[i][4] = true
         elseif C_Covenants.GetActiveCovenantID() ~= v[2] then
+            -- 未解锁且不是当前盟约 → 在复选框中显示"声望锁定"提示
             if rhpDB.L.tList[v[3]] ~= nil and rhpCheckButtons[v[3]] then
                 rhpCheckButtons[v[3]].Extratext = rhpCheckButtons[v[3]]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
                 rhpCheckButtons[v[3]].Extratext:SetText("|cff777777(" .. L["RENOWN_LOCKED"] .. ")|r")
@@ -321,45 +450,56 @@ local function listGenerate()
         end
     end
 
+    -- 检查是否有允许所有盟约炉石的成就（成就 15241）
     if select(4, GetAchievementInfo(15241)) == true then
         if rhpDB.settings.covOverride == true then
+            -- 用户勾选了"仅允许当前盟约" → 覆盖成就
             allCovenant = false
         else
             allCovenant = true
         end
     end
 
+    -- 遍历所有玩具，筛选可用的加入 rhpList
     for i, v in pairs(rhpDB.L.tList) do
-        if v["status"] == true then
-            if PlayerHasToy(i) then
+        if v["status"] == true then  -- 用户在选项中启用了此玩具
+            if PlayerHasToy(i) then   -- 玩家确实拥有此玩具
                 local addToy = true
-                -- Check for Covenant
+
+                -- 盟约炉石检查
                 for _, k in pairs(covenantHearths) do
                     if i == k[3] then
                         if k[4] == false and C_Covenants.GetActiveCovenantID() ~= k[2] then
+                            -- 未通过声望解锁且不是当前盟约 → 排除
                             addToy = false
                         elseif allCovenant == false and C_Covenants.GetActiveCovenantID() ~= k[2] then
+                            -- 用户限制了仅当前盟约且不是当前盟约 → 排除
                             addToy = false
                             break
                         end
                     end
                 end
-                -- Check Draenei
+
+                -- 德莱尼种族检查：德莱尼全息宝石（210455）仅限德莱尼（11）和光铸德莱尼（30）
                 if i == 210455 then
                     local _, _, raceID = UnitRace("player")
                     if not (raceID == 11 or raceID == 30) then
                         addToy = false
                     end
                 end
-                -- Create the list
+
+                -- 通过所有检查 → 加入可用列表
                 if addToy == true then
                     table.insert(rhpList, i)
                 end
             end
         end
     end
+
+    -- 进行一次随机选择
     setRandom()
-    -- Refresh modifier dropdowns to reflect updated toy names
+
+    -- 刷新所有修饰键下拉菜单的显示文本（玩具名称可能在物品加载完成后才可用）
     for _, mod in ipairs(MOD_KEYS) do
         for _, btn in ipairs(BTN_KEYS) do
             rhpModDropdowns[mod][btn]:SetText(getModBindDisplayName(rhpDB.settings.modBinds[mod][btn]))
@@ -367,21 +507,28 @@ local function listGenerate()
     end
 end
 
--- Update Hearthstone selections when options panel closes
+-- ========== 设置面板确认回调 ==========
+-- 当用户关闭设置面板时调用，保存所有选项到 rhpDB
 local function rhpOptionsOkay()
+    -- 保存每个玩具的启用/禁用状态
     for i, v in pairs(rhpDB.L.tList) do
         if rhpCheckButtons[i] then
             v["status"] = rhpCheckButtons[i]:GetChecked()
         end
     end
+    -- 保存设置选项
     rhpDB.settings.covOverride = rhpOverride:GetChecked()
     rhpDB.settings.dalOpt = rhpDalHearth:GetChecked()
     rhpDB.settings.garOpt = rhpGarHearth:GetChecked()
-    rhpDB.settings.warnMsg = false
+    rhpDB.settings.warnMsg = false  -- 重置警告消息标志，下次无可用玩具时会再次提示
+    -- 重新生成可用列表并刷新宏
     listGenerate()
 end
 
--- Macro icon selection
+-- ========== 宏图标选择 ==========
+-- arg1: "Random" → 使用当前随机玩具的图标（动态图标）
+-- arg1: "Hearthstone" → 固定使用普通炉石图标
+-- arg1: 数字 ItemID → 固定使用指定玩具的图标
 local function rhpSelectIcon(arg1)
     if arg1 == "Random" then
         rhpDB.iconOverride.name = L["RANDOM"]
@@ -392,25 +539,32 @@ local function rhpSelectIcon(arg1)
         rhpDB.iconOverride.icon = 134414
         rhpDB.iconOverride.id = 6948
     else
+        -- 使用指定玩具的名称和图标
         rhpDB.iconOverride.name = rhpDB.L.tList[arg1]["name"]
         rhpDB.iconOverride.icon = rhpDB.L.tList[arg1]["icon"]
         rhpDB.iconOverride.id = arg1
     end
+    -- 更新下拉菜单的显示
     rhpDropdown:SetText(rhpDB.iconOverride.name)
     rhpDropdown.Texture:SetTexture(rhpDB.iconOverride.icon)
 end
 
--- Dropdown menu generator for macro icon
+-- ========== 宏图标下拉菜单生成器 ==========
+-- 为 WowStyle1DropdownTemplate 提供菜单项
+-- 菜单选项：随机 → 普通炉石 → 所有已注册的玩具
 local function rhpDropdownGenerator(dropdown, rootDescription)
+    -- IsSelected: 判断某个值是否是当前选中的图标选项
     local function IsSelected(value)
         if value == "Random" then return rhpDB.iconOverride.name == L["RANDOM"] end
         if value == "Hearthstone" then return rhpDB.iconOverride.name == L["HEARTHSTONE"] end
         return rhpDB.iconOverride.id == value
     end
 
+    -- 创建两个特殊选项："随机"和"普通炉石"
     rootDescription:CreateRadio(L["RANDOM"], IsSelected, function() rhpSelectIcon("Random") end, "Random")
     rootDescription:CreateRadio(L["HEARTHSTONE"], IsSelected, function() rhpSelectIcon("Hearthstone") end, "Hearthstone")
 
+    -- 为每个已注册的玩具创建一个菜单项
     for i = 1, #rhToys do
         if rhpDB.L.tList[rhToys[i]] ~= nil then
             rootDescription:CreateRadio(rhpDB.L.tList[rhToys[i]]["name"], IsSelected, function() rhpSelectIcon(rhToys[i]) end, rhToys[i])
@@ -418,15 +572,19 @@ local function rhpDropdownGenerator(dropdown, rootDescription)
     end
 end
 
--- Dropdown menu generator for modifier bindings
+-- ========== 修饰键绑定下拉菜单生成器 ==========
+-- 为修饰键区域的每个下拉菜单提供选项：
+--   随机 → 普通炉石 → 达拉然炉石 → 要塞炉石 → 所有已注册的玩具
+-- dropdown.modKey 和 dropdown.btnKey 用于标识此菜单属于哪个修饰键+按键组合
 local function rhpModDropdownGenerator(dropdown, rootDescription)
-    local mod = dropdown.modKey
-    local btn = dropdown.btnKey
+    local mod = dropdown.modKey  -- "SHIFT" / "CTRL" / "ALT"
+    local btn = dropdown.btnKey  -- "1" / "2" / "3"
 
+    -- IsSelected: 判断某个值是否是当前绑定的选项
     local function IsSelected(value)
         local current = rhpDB.settings.modBinds[mod][btn]
         if value == DROPDOWN_RANDOM then
-            return current == nil
+            return current == nil  -- nil 表示"随机"
         elseif value == DROPDOWN_HEARTH then
             return current == "item:6948"
         elseif value == DROPDOWN_DALARAN then
@@ -434,13 +592,14 @@ local function rhpModDropdownGenerator(dropdown, rootDescription)
         elseif value == DROPDOWN_GARRISON then
             return current == "item:110560"
         else
-            return current == tonumber(value)
+            return current == tonumber(value)  -- 数字 ItemID 格式
         end
     end
 
+    -- OnSelect: 用户选择菜单项时的处理
     local function OnSelect(value)
         if value == DROPDOWN_RANDOM then
-            rhpDB.settings.modBinds[mod][btn] = nil
+            rhpDB.settings.modBinds[mod][btn] = nil  -- nil = 随机/不绑定
         elseif value == DROPDOWN_HEARTH then
             rhpDB.settings.modBinds[mod][btn] = "item:6948"
         elseif value == DROPDOWN_DALARAN then
@@ -448,17 +607,19 @@ local function rhpModDropdownGenerator(dropdown, rootDescription)
         elseif value == DROPDOWN_GARRISON then
             rhpDB.settings.modBinds[mod][btn] = "item:110560"
         else
-            rhpDB.settings.modBinds[mod][btn] = tonumber(value)
+            rhpDB.settings.modBinds[mod][btn] = tonumber(value)  -- 存储为数字 ItemID
         end
+        -- 更新下拉菜单显示文本
         dropdown:SetText(getModBindDisplayName(rhpDB.settings.modBinds[mod][btn]))
     end
 
+    -- 创建四个特殊选项
     rootDescription:CreateRadio(L["RANDOM"], IsSelected, function() OnSelect(DROPDOWN_RANDOM) end, DROPDOWN_RANDOM)
     rootDescription:CreateRadio(L["HEARTHSTONE"], IsSelected, function() OnSelect(DROPDOWN_HEARTH) end, DROPDOWN_HEARTH)
     rootDescription:CreateRadio(L["DALARAN_HEARTH"], IsSelected, function() OnSelect(DROPDOWN_DALARAN) end, DROPDOWN_DALARAN)
     rootDescription:CreateRadio(L["GARRISON_HEARTH"], IsSelected, function() OnSelect(DROPDOWN_GARRISON) end, DROPDOWN_GARRISON)
 
-    -- Add all toys from the list
+    -- 为每个已注册的玩具创建一个菜单项
     for i = 1, #rhToys do
         if rhpDB.L.tList[rhToys[i]] ~= nil then
             rootDescription:CreateRadio(rhpDB.L.tList[rhToys[i]]["name"], IsSelected, function() OnSelect(tostring(rhToys[i])) end, tostring(rhToys[i]))
@@ -466,44 +627,47 @@ local function rhpModDropdownGenerator(dropdown, rootDescription)
     end
 end
 
--- Add items in savedvariable
+-- ========== 保存变量初始化辅助函数 ==========
+-- 安全地向表中添加项：如果项已存在则跳过，否则添加
+-- table: 目标表
+-- item: 键（key）或值
+-- value: 可选，如果提供则作为键值对 table[item] = value，否则 table.insert(table, item)
 local function rhpInitDB(table, item, value)
     local isTable = type(value) == "table"
     local exists = false
-    -- Check if the item already exists in the table
+    -- 检查项是否已存在于表中
     for k, v in pairs(table) do
         if k == item or (type(v) == "table" and isTable and v == value) then
             exists = true
             break
         end
     end
-    -- If the item does not exist, add it
+    -- 不存在则添加
     if not exists then
         if value ~= nil then
-            -- Add item with a value
-            table[item] = value
+            table[item] = value  -- 键值对形式添加
         else
-            -- Add item without a value
-            table.insert(table, item)
+            table.insert(table, item)  -- 列表形式追加
         end
     end
 end
 
--- Reset to default settings
+-- ========== 恢复默认设置 ==========
+-- 将所有选项重置为插件的出厂默认值
 local function rhpResetDefaults()
-    -- Reset all toy checkboxes to checked
+    -- 所有玩具复选框 → 启用
     for i, v in pairs(rhpCheckButtons) do
         v:SetChecked(true)
     end
-    -- Reset settings checkboxes
-    rhpOverride:SetChecked(false)
-    rhpDalHearth:SetChecked(true)
-    rhpGarHearth:SetChecked(true)
-    -- Reset macro name
+    -- 设置复选框 → 默认值
+    rhpOverride:SetChecked(false)   -- 不禁用非当前盟约
+    rhpDalHearth:SetChecked(true)   -- 右键 → 达拉然炉石
+    rhpGarHearth:SetChecked(true)   -- 中键 → 要塞炉石
+    -- 宏名称 → 默认 "Random Hearth"（或其本地化版本）
     rhpMacroName:SetText(L["MACRO_NAME"])
-    -- Reset icon override
+    -- 宏图标 → "随机"（动态显示当前玩具图标）
     rhpSelectIcon("Random")
-    -- Reset all modifier bindings to Random
+    -- 所有修饰键绑定 → "随机"（清除所有自定义绑定）
     for _, mod in ipairs(MOD_KEYS) do
         for _, btn in ipairs(BTN_KEYS) do
             rhpDB.settings.modBinds[mod][btn] = nil
@@ -514,17 +678,28 @@ local function rhpResetDefaults()
 end
 
 ----------------------------------------------------------------------------------------------------------------------
--- SecureActionButton (rhpB)
+-- SecureActionButton（rhpB）— 安全动作按钮的配置
+--
+-- 这是整个插件的核心交互机制：
+--   - rhpB 是一个受 WoW 安全系统保护的按钮，可以在战斗中响应点击
+--   - 宏通过 /click rhpB [按键编号] 将点击路由到此按钮
+--   - 按钮的属性（type, toy, item）决定了实际执行的动作
+--   - PostClick 脚本在点击后触发，用于重新随机选择下一个玩具
 ----------------------------------------------------------------------------------------------------------------------
+
+-- RegisterForClicks("AnyDown"): 响应所有鼠标按键（左/右/中）的按下事件
 rhpBtn:RegisterForClicks("AnyDown")
+-- pressAndHoldAction = true: 允许按住按钮持续施放（类似原版炉石行为）
 rhpBtn:SetAttribute("pressAndHoldAction", true)
+-- 默认动作类型为 "toy"（使用玩具），具体玩具名称由 updateButtonAttributes() 动态设置
 rhpBtn:SetAttribute("type", "toy")
 rhpBtn:SetAttribute("typerelease", "toy")
+-- PostClick 脚本：点击后触发
 rhpBtn:SetScript("PostClick", function(self, button)
     if not combatCheck() then
+        -- 仅在左键无修饰键时重新随机选择下一个玩具
+        -- 修饰键+右键/中键不应该触发随机重选
         if button == "LeftButton" or button == "1" then
-            -- Only reroll on left click (not on modifier-right/middle clicks)
-            -- Check if no modifier was held
             if not IsShiftKeyDown() and not IsControlKeyDown() and not IsAltKeyDown() then
                 setRandom()
             end
@@ -533,15 +708,24 @@ rhpBtn:SetScript("PostClick", function(self, button)
 end)
 
 ----------------------------------------------------------------------------------------------------------------------
--- Options Panel
+-- 设置面板（Options Panel）— 布局和控件配置
+-- 参考原始 RandomHearth 的验证模式：
+--   1. RegisterCanvasLayoutCategory（Frames 部分）
+--   2. name + OnCommit + OnDefault + OnRefresh + RegisterAddOnCategory（此处）
+--   3. 布局代码（标题、描述、滚动列表、复选框、按钮等）
 ----------------------------------------------------------------------------------------------------------------------
 rhpOptionsPanel.name = "Random Hearthstone Plus"
+-- OnCommit: 用户点击"确定"关闭设置面板时保存设置
 rhpOptionsPanel.OnCommit = function() rhpOptionsOkay(); end
+-- OnDefault: 用户点击"恢复默认"时重置所有选项
 rhpOptionsPanel.OnDefault = function() rhpResetDefaults(); end
+-- OnRefresh: 面板刷新回调（本插件使用手动布局，无需刷新）
 rhpOptionsPanel.OnRefresh = function() end
+-- 将设置分类注册到游戏的"选项 → 插件"界面
 Settings.RegisterAddOnCategory(rhpCategory)
 
--- Title
+-- ========== 标题栏 ==========
+-- 显示插件名称 "Random Hearthstone Plus"（或其本地化版本）
 rhpTitle:SetPoint("TOPLEFT", 10, -10)
 rhpTitle:SetWidth(SettingsPanel.Container:GetWidth() - 35)
 rhpTitle:SetHeight(1)
@@ -549,14 +733,14 @@ rhpTitle.Text = rhpTitle:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 rhpTitle.Text:SetPoint("TOPLEFT", rhpTitle, 0, 0)
 rhpTitle.Text:SetText(L["ADDON_NAME"])
 
--- Thanks
+-- ========== 致谢文字（右上角）==========
 rhpOptionsPanel.Thanks = rhpOptionsPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 rhpOptionsPanel.Thanks:SetPoint("TOPRIGHT", rhpOptionsPanel, "TOPRIGHT", -5, -5)
-rhpOptionsPanel.Thanks:SetTextColor(1, 1, 1, 0.5)
+rhpOptionsPanel.Thanks:SetTextColor(1, 1, 1, 0.5)  -- 半透明白色
 rhpOptionsPanel.Thanks:SetText(L["THANKS"] .. " :)\nOriginal by JamienAU | Enhanced by David W Zhang")
 rhpOptionsPanel.Thanks:SetJustifyH("RIGHT")
 
--- Description
+-- ========== 描述文字 ==========
 rhpDesc:SetPoint("TOPLEFT", 20, -40)
 rhpDesc:SetWidth(SettingsPanel.Container:GetWidth() - 35)
 rhpDesc:SetHeight(1)
@@ -564,31 +748,40 @@ rhpDesc.Text = rhpDesc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 rhpDesc.Text:SetPoint("TOPLEFT", rhpDesc, 0, 0)
 rhpDesc.Text:SetText(L["DESCRIPTION"])
 
--- Scroll Frame
+-- ========== 滚动框架 ==========
+-- 承载玩具复选框列表，可垂直滚动
 rhpOptionsScroll:SetPoint("TOPLEFT", 5, -60)
 rhpOptionsScroll:SetPoint("BOTTOMRIGHT", -25, 150)
 
--- Divider
+-- ========== 分割线 ==========
+-- 滚动列表上方的视觉分割线
 rhpDivider:SetStartPoint("BOTTOMLEFT", rhpDivider:GetParent(), 20, -10)
 rhpDivider:SetEndPoint("BOTTOMRIGHT", rhpDivider:GetParent(), 0, -10)
 rhpDivider:SetColorTexture(0.25, 0.25, 0.25, 1)
 rhpDivider:SetThickness(1.2)
 
--- Scroll Frame child
+-- ========== 滚动子框架 ==========
+-- 所有玩具复选框挂在 rhpScrollChild 上，通过滚动框架显示
 rhpOptionsScroll:SetScrollChild(rhpScrollChild)
 rhpScrollChild:SetWidth(SettingsPanel.Container:GetWidth() - 35)
 rhpScrollChild:SetHeight(1)
 
--- Checkbox for each toy
+-- ========== 玩具复选框列表 ==========
+-- 为 rhToys 列表中的每个玩具创建一个复选框（CheckButton）
+-- 通过 Item:CreateFromItemID 异步加载物品名称
+-- chkOffset: 累积的垂直偏移量（每个复选框间距 26 像素）
 local chkOffset = 0
 for i = 1, #rhToys do
     if i > 1 then
         chkOffset = chkOffset + -26
     end
+    -- 创建复选框
     rhpCheckButtons[rhToys[i]] = CreateFrame("CheckButton", nil, rhpScrollChild, "UICheckButtonTemplate")
     rhpCheckButtons[rhToys[i]]:SetPoint("TOPLEFT", 15, chkOffset)
     rhpCheckButtons[rhToys[i]]:SetSize(25, 25)
+    -- 创建复选框标签文字
     rhpCheckButtons[rhToys[i]].Text = rhpCheckButtons[rhToys[i]]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    -- 异步加载物品名称（ContinueOnItemLoad 在物品数据可用时回调）
     local item = Item:CreateFromItemID(rhToys[i])
     item:ContinueOnItemLoad(function()
         if rhpCheckButtons[rhToys[i]] then
@@ -599,7 +792,7 @@ for i = 1, #rhToys do
     rhpCheckButtons[rhToys[i]].Text:SetPoint("LEFT", 28, 0)
 end
 
--- Select All button
+-- ========== "全选"按钮 ==========
 rhpSelectAll:SetPoint("TOPLEFT", rhpSelectAll:GetParent(), "BOTTOMLEFT", 20, -20)
 rhpSelectAll:SetSize(100, 25)
 rhpSelectAll:SetText(L["SELECT_ALL"])
@@ -609,7 +802,7 @@ rhpSelectAll:SetScript("OnClick", function(self)
     end
 end)
 
--- Deselect All button
+-- ========== "全部取消"按钮 ==========
 rhpDeselectAll:SetPoint("TOPLEFT", rhpDeselectAll:GetParent(), "BOTTOMLEFT", 135, -20)
 rhpDeselectAll:SetSize(100, 25)
 rhpDeselectAll:SetText(L["DESELECT_ALL"])
@@ -619,79 +812,91 @@ rhpDeselectAll:SetScript("OnClick", function(self)
     end
 end)
 
--- Macro override dropdown
+-- ========== 宏图标选择下拉菜单 ==========
 rhpDropdown:SetPoint("TOPRIGHT", rhpOverride:GetParent(), "BOTTOMRIGHT", -20, -35)
 rhpDropdown:SetWidth(200)
 rhpDropdown:SetDefaultText(L["RANDOM"])
+-- 下拉菜单右侧的图标预览
 rhpDropdown.Texture = rhpDropdown:CreateTexture(nil, "OVERLAY")
 rhpDropdown.Texture:SetSize(24, 24)
 rhpDropdown.Texture:SetPoint("LEFT", rhpDropdown, "RIGHT", 5, 0)
+-- 下拉菜单上方的标签文字
 rhpDropdown.Extratext = rhpDropdown:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 rhpDropdown.Extratext:SetText(L["OPT_MACRO_ICON"])
 rhpDropdown.Extratext:SetPoint("BOTTOMLEFT", rhpDropdown, "TOPLEFT", 0, 5)
 
--- Covenant override checkbox
+-- ========== "仅允许当前盟约炉石"复选框 ==========
 rhpOverride:SetPoint("TOPLEFT", rhpOverride:GetParent(), "BOTTOMLEFT", 15, -50)
 rhpOverride:SetSize(25, 25)
 rhpOverride.Text:SetJustifyH("LEFT")
 rhpOverride.Text:SetText(" " .. L["COV_ONLY"])
 rhpOverride.Text:SetTextColor(1, 1, 1, 1)
 
--- Dalaran hearth checkbox
+-- ========== "右键 → 达拉然炉石"复选框 ==========
 rhpDalHearth:SetPoint("TOPLEFT", rhpOverride, "BOTTOMLEFT", 0, 0)
 rhpDalHearth:SetSize(25, 25)
 rhpDalHearth.Text:SetJustifyH("LEFT")
 rhpDalHearth.Text:SetText(" " .. L["DAL_R_CLICK"])
 rhpDalHearth.Text:SetTextColor(1, 1, 1, 1)
 
--- Garrison hearth checkbox
+-- ========== "中键 → 要塞炉石"复选框 ==========
 rhpGarHearth:SetPoint("TOPLEFT", rhpDalHearth, "BOTTOMLEFT", 0, 0)
 rhpGarHearth:SetSize(25, 25)
 rhpGarHearth.Text:SetJustifyH("LEFT")
 rhpGarHearth.Text:SetText(" " .. L["GAR_M_CLICK"])
 rhpGarHearth.Text:SetTextColor(1, 1, 1, 1)
 
--- Custom macro name box
+-- ========== 自定义宏名称输入框 ==========
 rhpMacroName:SetPoint("TOPLEFT", rhpDropdown, "BOTTOMLEFT", 25, -20)
 rhpMacroName:SetAutoFocus(false)
 rhpMacroName:SetSize(208, 20)
 rhpMacroName:SetFontObject("GameFontNormal")
 rhpMacroName:SetTextColor(1, 1, 1, 1)
-rhpMacroName:SetMaxLetters(16)
+rhpMacroName:SetMaxLetters(16)  -- 宏名称最多 16 个字符
+-- 输入框上方的标签
 rhpMacroName.Text = rhpMacroName:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 rhpMacroName.Text:SetText(L["OPT_MACRO_NAME"])
 rhpMacroName.Text:SetPoint("BOTTOMLEFT", rhpMacroName, "TOPLEFT", 0, 5)
+-- 输入框下方的错误提示（名称已被占用时显示）
 rhpMacroName.Exist = rhpMacroName:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-rhpMacroName.Exist:SetTextColor(1, 0, 0, 1)
+rhpMacroName.Exist:SetTextColor(1, 0, 0, 1)  -- 红色
 rhpMacroName.Exist:SetJustifyH("LEFT")
 rhpMacroName.Exist:SetPoint("TOPLEFT", rhpMacroName, "BOTTOMLEFT", 0, -5)
 rhpMacroName.Exist:SetText(L["UNIQUE_NAME_ERROR"])
-rhpMacroName.Exist:Hide()
+rhpMacroName.Exist:Hide()  -- 初始隐藏
+-- 输入框右侧的状态图标（✓ 或 ✗）
 rhpMacroName.Icon = rhpMacroName:CreateTexture(nil, "OVERLAY")
 rhpMacroName.Icon:SetPoint("LEFT", rhpMacroName, "RIGHT", 5, 0)
 rhpMacroName.Icon:SetTexture("Interface/COMMON/CommonIcons.PNG")
 rhpMacroName.Icon:SetSize(24, 24)
+
+-- OnShow: 输入框显示时初始化内容和隐藏状态图标
 rhpMacroName:SetScript("OnShow", function()
     rhpMacroName.Exist:Hide()
     rhpMacroName.Icon:Hide()
     rhpMacroName:SetText(rhpDB.settings.macroName)
 end)
+
+-- OnTextChanged: 输入框文本变化时实时检查名称是否可用
+-- 使用 0.5 秒防抖计时器，避免每次按键都触发检查
 rhpMacroName:SetScript("OnTextChanged", function(self, userInput)
     if userInput == true then
-        -- Checking if the macro exists. Adding in a timer so it doesn't spam check on every key press.
         if waitTimer ~= true then
             waitTimer = true
             C_Timer.After(0.5, function()
                 local name = rhpMacroName:GetText()
                 if name ~= rhpDB.settings.macroName and GetMacroIndexByName(name) ~= 0 then
+                    -- 名称已被其他宏占用 → 显示红色叉号
                     rhpMacroName.Exist:Show()
-                    rhpMacroName.Icon:SetTexCoord(0.25, 0.38, 0, 0.26)
+                    rhpMacroName.Icon:SetTexCoord(0.25, 0.38, 0, 0.26)  -- 叉号纹理坐标
                     rhpMacroName.Icon:Show()
                 elseif string.len(name) == 0 then
+                    -- 名称为空 → 隐藏图标
                     rhpMacroName.Icon:Hide()
                 else
+                    -- 名称可用 → 显示绿色勾号
                     rhpMacroName.Exist:Hide()
-                    rhpMacroName.Icon:SetTexCoord(0, 0.13, 0.51, 0.75)
+                    rhpMacroName.Icon:SetTexCoord(0, 0.13, 0.51, 0.75)  -- 勾号纹理坐标
                     rhpMacroName.Icon:Show()
                 end
                 waitTimer = false
@@ -699,13 +904,27 @@ rhpMacroName:SetScript("OnTextChanged", function(self, userInput)
         end
     end
 end)
+-- OnEditFocusLost: 输入框失去焦点 → 检查并保存名称
 rhpMacroName:SetScript("OnEditFocusLost", function() checkMacroName() end)
+-- OnEnterPressed: 按回车 → 检查并保存名称
 rhpMacroName:SetScript("OnEnterPressed", function() checkMacroName() end)
 
 ----------------------------------------------------------------------------------------------------------------------
--- Modifier Key Binding Section (3x3 dropdown grid)
+-- 修饰键绑定区域（Modifier Key Binding Section）— 3×3 下拉菜单网格
+--
+-- 布局结构：
+--   +----------------+----------------+----------------+----------------+
+--   |                | 左键 (Left)    | 右键 (Right)   | 中键 (Middle)  |
+--   +----------------+----------------+----------------+----------------+
+--   | Shift          | [下拉菜单]     | [下拉菜单]     | [下拉菜单]     |
+--   | Ctrl           | [下拉菜单]     | [下拉菜单]     | [下拉菜单]     |
+--   | Alt            | [下拉菜单]     | [下拉菜单]     | [下拉菜单]     |
+--   +----------------+----------------+----------------+----------------+
+--
+-- 每个下拉菜单的内容相同：随机 / 普通炉石 / 达拉然炉石 / 要塞炉石 / 所有玩具
 ----------------------------------------------------------------------------------------------------------------------
--- Section label
+
+-- ========== 区域标题 ==========
 rhpModSectionLabel:SetPoint("TOPLEFT", rhpMacroName, "BOTTOMLEFT", -25, -40)
 rhpModSectionLabel:SetWidth(SettingsPanel.Container:GetWidth() - 35)
 rhpModSectionLabel:SetHeight(1)
@@ -713,10 +932,10 @@ rhpModSectionLabel.Text = rhpModSectionLabel:CreateFontString(nil, "OVERLAY", "G
 rhpModSectionLabel.Text:SetPoint("TOPLEFT", rhpModSectionLabel, 0, 0)
 rhpModSectionLabel.Text:SetText(L["MOD_BINDINGS"])
 
--- Column headers: Left Click | Right Click | Middle Click
+-- ========== 列标题：左键 | 右键 | 中键 ==========
 local headerLabels = { L["MOD_LEFT_CLICK"], L["MOD_RIGHT_CLICK"], L["MOD_MIDDLE_CLICK"] }
-local headerStartX = 125
-local headerSpacing = 160
+local headerStartX = 125     -- 第一个列标题的 X 偏移
+local headerSpacing = 160    -- 列间距
 for i, label in ipairs(headerLabels) do
     local hdr = CreateFrame("Frame", nil, rhpOptionsPanel)
     hdr:SetPoint("TOPLEFT", rhpModSectionLabel, "TOPLEFT", headerStartX + (i - 1) * headerSpacing, -25)
@@ -725,18 +944,19 @@ for i, label in ipairs(headerLabels) do
     hdr.Text = hdr:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     hdr.Text:SetPoint("TOPLEFT", hdr, 0, 0)
     hdr.Text:SetText(label)
-    hdr.Text:SetTextColor(1, 0.82, 0, 1) -- gold color for headers
+    hdr.Text:SetTextColor(1, 0.82, 0, 1)  -- 金色标题
     rhpModHeaders[i] = hdr
 end
 
--- Row labels and dropdowns
+-- ========== 行标签和下拉菜单：Shift / Ctrl / Alt ==========
 local rowLabels = { L["MOD_SHIFT"], L["MOD_CTRL"], L["MOD_ALT"] }
-local rowStartY = -50
-local rowSpacing = -30
+local rowStartY = -50      -- 第一行的 Y 偏移
+local rowSpacing = -30     -- 行间距
 
 for modIdx, mod in ipairs(MOD_KEYS) do
     rhpModDropdowns[mod] = {}
-    -- Row label
+
+    -- 行标签（Shift / Ctrl / Alt）
     local rowLabel = CreateFrame("Frame", nil, rhpOptionsPanel)
     rowLabel:SetPoint("TOPLEFT", rhpModSectionLabel, "TOPLEFT", 5, rowStartY + (modIdx - 1) * rowSpacing)
     rowLabel:SetWidth(110)
@@ -747,11 +967,13 @@ for modIdx, mod in ipairs(MOD_KEYS) do
     rowLabel.Text:SetTextColor(1, 1, 1, 1)
     rhpModRowLabels[mod] = rowLabel
 
+    -- 为每个按键（左/右/中）创建下拉菜单
     for btnIdx, btn in ipairs(BTN_KEYS) do
         local dd = CreateFrame("DropdownButton", nil, rhpOptionsPanel, "WowStyle1DropdownTemplate")
         dd:SetPoint("TOPLEFT", rhpModSectionLabel, "TOPLEFT", headerStartX + (btnIdx - 1) * headerSpacing, rowStartY + (modIdx - 1) * rowSpacing)
         dd:SetWidth(140)
         dd:SetDefaultText(L["RANDOM"])
+        -- 将修饰键和按键信息挂载到下拉菜单对象上，供生成器函数使用
         dd.modKey = mod
         dd.btnKey = btn
         dd:SetupMenu(rhpModDropdownGenerator)
@@ -760,25 +982,37 @@ for modIdx, mod in ipairs(MOD_KEYS) do
 end
 
 ----------------------------------------------------------------------------------------------------------------------
--- Listener for addon loaded
+-- 事件监听器（Event Listener）— 插件生命周期管理
+--
+-- 监听三个关键事件：
+--   ADDON_LOADED        → 初始化保存变量、物品数据库、选项面板状态
+--   PLAYER_ENTERING_WORLD → 物品数据加载完成后生成可用玩具列表
+--   PLAYER_REGEN_ENABLED  → 战斗中挂起的宏更新在脱离战斗后执行
 ----------------------------------------------------------------------------------------------------------------------
+
 rhpListener:RegisterEvent("ADDON_LOADED")
 rhpListener:RegisterEvent("PLAYER_ENTERING_WORLD")
 rhpListener:SetScript("OnEvent", function(self, event, arg1)
+    -- ========== PLAYER_REGEN_ENABLED：脱离战斗 ==========
+    -- 如果之前在战斗中挂起了宏更新，现在执行
     if event == "PLAYER_REGEN_ENABLED" and pendingMacroUpdate then
         pendingMacroUpdate = false
         self:UnregisterEvent("PLAYER_REGEN_ENABLED")
         updateMacro()
         return
     end
+
+    -- ========== ADDON_LOADED：插件加载 ==========
     if event == "ADDON_LOADED" and arg1 == addon then
-        -- Set savedvariable defaults if first load or compare and update savedvariables with toy list
+        -- 首次加载提示
         if rhpDB == nil then
             print(L["SETUP_1"])
             print(L["SETUP_2"])
             print(L["SETUP_3"])
-            rhpDB = {}
+            rhpDB = {}  -- 初始化保存变量表
         end
+
+        -- 使用 rhpInitDB 安全地初始化所有保存变量，保留已有值
         rhpInitDB(rhpDB, "settings", {})
         rhpInitDB(rhpDB.settings, "covOverride", false)
         rhpInitDB(rhpDB.settings, "dalOpt", true)
@@ -790,7 +1024,8 @@ rhpListener:SetScript("OnEvent", function(self, event, arg1)
         rhpInitDB(rhpDB, "L", {})
         rhpInitDB(rhpDB.L, "locale", GetLocale())
 
-        -- Initialize modifier bindings storage
+        -- 初始化修饰键绑定存储结构
+        -- 结构：rhpDB.settings.modBinds[修饰键][按键编号] = nil / "item:XXXXX" / ItemID数字
         rhpInitDB(rhpDB.settings, "modBinds", {})
         for _, mod in ipairs(MOD_KEYS) do
             if rhpDB.settings.modBinds[mod] == nil then
@@ -798,13 +1033,14 @@ rhpListener:SetScript("OnEvent", function(self, event, arg1)
             end
             for _, btn in ipairs(BTN_KEYS) do
                 if rhpDB.settings.modBinds[mod][btn] == nil then
-                    rhpDB.settings.modBinds[mod][btn] = nil -- explicit nil = random
+                    rhpDB.settings.modBinds[mod][btn] = nil  -- nil = 默认随机行为
                 end
             end
         end
 
+        -- 首次加载时构建物品数据库（从 rhToys 列表异步加载名称和图标）
         if rhpDB.L.tList == nil then
-            wait = true
+            wait = true  -- 标记正在等待物品数据加载
             rhpDB.L.tList = {}
             for i = 1, #rhToys do
                 local item = Item:CreateFromItemID(rhToys[i])
@@ -812,15 +1048,16 @@ rhpListener:SetScript("OnEvent", function(self, event, arg1)
                     rhpDB.L.tList[rhToys[i]] = {
                         name = item:GetItemName(),
                         icon = item:GetItemIcon(),
-                        status = true
+                        status = true  -- 默认启用
                     }
                 end)
             end
         end
 
+        -- 清除旧的 chkStatus 字段（向后兼容）
         rhpDB.chkStatus = nil
 
-        -- Remove IDs that no longer exist in rhToys list
+        -- 清理：移除数据库中已不存在于 rhToys 列表的旧物品
         for i, v in pairs(rhpDB.L.tList) do
             local exists = 0
             for l = 1, #rhToys do
@@ -833,7 +1070,7 @@ rhpListener:SetScript("OnEvent", function(self, event, arg1)
             end
         end
 
-        -- Add any new IDs to saved variables as enabled
+        -- 添加 rhToys 中有但数据库中不存在的新物品（例如插件更新后新增的玩具）
         for i = 1, #rhToys do
             if not rhpDB.L.tList[rhToys[i]] then
                 wait = true
@@ -842,11 +1079,12 @@ rhpListener:SetScript("OnEvent", function(self, event, arg1)
                     rhpDB.L.tList[rhToys[i]] = {
                         name = item:GetItemName(),
                         icon = item:GetItemIcon(),
-                        status = true
+                        status = true  -- 新玩具默认启用
                     }
                     if rhpCheckButtons[rhToys[i]] then
                         rhpCheckButtons[rhToys[i]]:SetChecked(true)
                     end
+                    -- 如果是最后一个新物品，触发列表生成
                     if i == #rhToys then
                         listGenerate()
                     end
@@ -854,9 +1092,9 @@ rhpListener:SetScript("OnEvent", function(self, event, arg1)
             end
         end
 
-        -- Update rhpDB if locale has changed
+        -- 语言环境变更处理：如果玩家切换了客户端语言，更新所有物品名称
         if rhpDB.L.locale ~= GetLocale() then
-            -- Update main list
+            -- 更新主列表中的物品名称
             for i, v in pairs(rhpDB.L.tList) do
                 local item = Item:CreateFromItemID(i)
                 item:ContinueOnItemLoad(function()
@@ -864,7 +1102,7 @@ rhpListener:SetScript("OnEvent", function(self, event, arg1)
                 end)
             end
 
-            -- Update iconOverride
+            -- 更新图标覆写（如果用户选择了特定玩具图标）
             if rhpDB.iconOverride.id ~= nil then
                 local item = Item:CreateFromItemID(rhpDB.iconOverride.id)
                 item:ContinueOnItemLoad(function()
@@ -876,14 +1114,15 @@ rhpListener:SetScript("OnEvent", function(self, event, arg1)
             rhpDB.L.locale = GetLocale()
         end
 
-        -- Loop through options and set checkbox state
+        -- 根据保存的状态设置所有复选框的初始勾选状态
         for i, v in pairs(rhpDB.L.tList) do
             if rhpCheckButtons[i] then
                 rhpCheckButtons[i]:SetChecked(v["status"])
             end
         end
 
-        -- Set localised name for Dalaran and Garrison hearths
+        -- 异步加载达拉然炉石（140192）和要塞炉石（110560）的本地化名称
+        -- 这些名称用于 SecureActionButton 的 PreClick 动态物品切换
         local tmp = { { "dalaran", 140192 }, { "garrison", 110560 } }
         for _, v in pairs(tmp) do
             local item = Item:CreateFromItemID(v[2])
@@ -892,6 +1131,7 @@ rhpListener:SetScript("OnEvent", function(self, event, arg1)
             end)
         end
 
+        -- 恢复所有选项控件的显示状态
         rhpOverride:SetChecked(rhpDB.settings.covOverride)
         rhpDalHearth:SetChecked(rhpDB.settings.dalOpt)
         rhpGarHearth:SetChecked(rhpDB.settings.garOpt)
@@ -899,22 +1139,27 @@ rhpListener:SetScript("OnEvent", function(self, event, arg1)
         rhpDropdown:SetText(rhpDB.iconOverride.name)
         rhpDropdown:SetupMenu(rhpDropdownGenerator)
 
-        -- Initialize modifier dropdown display text
+        -- 初始化所有修饰键下拉菜单的显示文本
         for _, mod in ipairs(MOD_KEYS) do
             for _, btn in ipairs(BTN_KEYS) do
                 rhpModDropdowns[mod][btn]:SetText(getModBindDisplayName(rhpDB.settings.modBinds[mod][btn]))
             end
         end
 
+        -- 注销 ADDON_LOADED 事件，后续不再处理
         self:UnregisterEvent("ADDON_LOADED")
     end
 
+    -- ========== 登录提示消息 ==========
+    -- 首次安装或版本升级时显示欢迎信息（仅显示一次）
     if rhpDB and rhpDB.settings.loginMsg ~= loginMsg then
         rhpDB.settings.loginMsg = loginMsg
         print(L["LOGIN_MESSAGE_1"])
         print(L["LOGIN_MESSAGE_2"])
     end
 
+    -- ========== PLAYER_ENTERING_WORLD：进入世界 ==========
+    -- 此时物品数据已完全加载，如果不在等待状态则生成可用玩具列表
     if event == "PLAYER_ENTERING_WORLD" then
         if not wait then
             listGenerate()
@@ -923,7 +1168,7 @@ rhpListener:SetScript("OnEvent", function(self, event, arg1)
 end)
 
 ----------------------------------------------------------------------------------------------------------------------
--- Slash command
+-- 斜杠命令（Slash Command）— /rhp 打开设置面板
 ----------------------------------------------------------------------------------------------------------------------
 SLASH_RandomHearthstonePlus1 = "/rhp"
 function SlashCmdList.RandomHearthstonePlus(msg, editbox)
@@ -931,6 +1176,6 @@ function SlashCmdList.RandomHearthstonePlus(msg, editbox)
 end
 
 --[[
-    Ignore this, it's for future me when Blizz breaks things again:
+    备忘：当 Blizz 再次破坏 API 时参考此文件
     /Interface/SharedXML/Settings/Blizzard_Settings.lua
 ]]
