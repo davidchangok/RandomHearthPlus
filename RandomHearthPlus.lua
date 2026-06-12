@@ -828,7 +828,7 @@ for modIdx, mod in ipairs(MOD_KEYS) do
         dd:SetDefaultText(L["RANDOM"])
         dd.modKey = mod
         dd.btnKey = btn
-        dd:SetupMenu(rhpModDropdownGenerator)
+        -- SetupMenu 在 ADDON_LOADED 中调用（需要 rhpDB 已初始化）
         rhpModDropdowns[mod][btn] = dd
     end
 end
@@ -1114,10 +1114,12 @@ rhpListener:SetScript("OnEvent", function(self, event, arg1)
         rhpDropdown:SetText(rhpDB.iconOverride.name)
         rhpDropdown:SetupMenu(rhpDropdownGenerator)
 
-        -- 初始化所有修饰键下拉菜单的显示文本
+        -- 初始化所有修饰键下拉菜单的显示文本和菜单数据
         for _, mod in ipairs(MOD_KEYS) do
             for _, btn in ipairs(BTN_KEYS) do
-                rhpModDropdowns[mod][btn]:SetText(getModBindDisplayName(rhpDB.settings.modBinds[mod][btn]))
+                local dd = rhpModDropdowns[mod][btn]
+                dd:SetupMenu(rhpModDropdownGenerator)
+                dd:SetText(getModBindDisplayName(rhpDB.settings.modBinds[mod][btn]))
             end
         end
 
