@@ -925,7 +925,8 @@ rhpMacroName:SetScript("OnEnterPressed", function() checkMacroName() end)
 ----------------------------------------------------------------------------------------------------------------------
 
 -- ========== 区域标题 ==========
-rhpModSectionLabel:SetPoint("TOPLEFT", rhpMacroName, "BOTTOMLEFT", -25, -40)
+-- 锚定到左侧的 Garrison 复选框，与上方的 Covenant/Dalaran/Garrison 选项左对齐
+rhpModSectionLabel:SetPoint("TOPLEFT", rhpGarHearth, "BOTTOMLEFT", -15, -45)
 rhpModSectionLabel:SetWidth(SettingsPanel.Container:GetWidth() - 35)
 rhpModSectionLabel:SetHeight(1)
 rhpModSectionLabel.Text = rhpModSectionLabel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
