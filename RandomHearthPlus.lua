@@ -849,7 +849,7 @@ rhpGarHearth.Text:SetText(" " .. L["GAR_M_CLICK"])
 rhpGarHearth.Text:SetTextColor(1, 1, 1, 1)
 
 -- ========== 自定义宏名称输入框 ==========
-posY = posY - 30  -- 与上方 Garrison 复选框的间距
+posY = posY - 50  -- 与上方 Garrison 复选框的间距
 rhpMacroName:SetPoint("TOPLEFT", rhpScrollChild, "TOPLEFT", 25, posY)
 rhpMacroName:SetAutoFocus(false)
 rhpMacroName:SetSize(208, 20)
