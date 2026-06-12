@@ -1,0 +1,12 @@
+## Interface: 120005
+## Title: Random Hearthstone Plus
+## Author: David W Zhang
+## Version: 1.0.0
+## Notes: Enhanced random hearthstone & teleport toys with modifier key bindings
+## SavedVariables: rhpDB
+## IconTexture: Interface\Icons\Inv_misc_rune_01
+## Category-enUS: Inventory
+## Category-zhCN: 物品栏
+
+LocalisationPlus.lua
+RandomHearthPlus.lua
