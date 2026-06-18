@@ -270,12 +270,43 @@ local function rhpPreClick(self, button, isDown)
     self:SetAttribute("toy", macroToyName)
 end
 
+-- ========== 将绑定值转换为 #showtooltip 可用的显示字符串 ==========
+-- 绑定为 nil → 返回 nil（不添加修饰键条件，图标跟随默认）
+-- 绑定为数字 → 返回 "item:XXXXX" 格式（玩具 ItemID）
+-- 绑定为字符串 → 直接返回（已经是 "item:XXXXX" 格式的物品）
+local function bindToShowtooltip(bind)
+    if bind == nil then return nil end
+    if type(bind) == "number" then
+        return "item:" .. bind
+    end
+    return bind
+end
+
+-- ========== 构建带修饰键条件图标的 #showtooltip 行 ==========
+-- 根据用户对 Shift/Ctrl/Alt + 左键的绑定，生成条件图标切换
+-- 格式: #showtooltip [mod:shift]item:276371;[mod:ctrl]item:140192;默认显示
+-- 按住对应修饰键时，动作条按钮图标自动切换为绑定物品的图标
+local function buildShowtooltip()
+    local modOrder = {{"SHIFT", "shift"}, {"CTRL", "ctrl"}, {"ALT", "alt"}}
+    local parts = {}
+    for _, m in ipairs(modOrder) do
+        local display = bindToShowtooltip(rhpDB.settings.modBinds[m[1]]["1"])
+        if display then
+            parts[#parts + 1] = string.format("[mod:%s]%s", m[2], display)
+        end
+    end
+    -- 默认（无修饰键）：当前随机炉石玩具
+    parts[#parts + 1] = macroToyName
+    return "#showtooltip " .. table.concat(parts, ";")
+end
+
 -- ========== 创建或更新全局宏 ==========
 -- 生成简单的 /click 宏，仅按鼠标按键类型（左/右/中）路由到 rhpB 安全按钮
 -- 修饰键（Shift/Ctrl/Alt）由 rhpB 的 PreClick 脚本实时检测并动态路由
 --   [btn:2]rhpB 2 → 右键（PreClick 判断 Dalaran 或修饰键绑定）
 --   [btn:3]rhpB 3 → 中键（PreClick 判断 Garrison 或修饰键绑定）
 --   rhpB       → 默认左键（PreClick 判断随机玩具或修饰键绑定）
+-- #showtooltip 使用条件语法 [mod:shift/ctrl/alt] 动态切换图标
 -- 德鲁伊特殊处理：自动在宏中加入 /cancelform 以取消变形形态
 local function updateMacro()
     if not combatCheck() then
@@ -289,19 +320,17 @@ local function updateMacro()
             macroText = "#showtooltip " .. macroToyName .. "\n/use " .. macroToyName
         else
             -- 构建宏文本
-            -- /click 只按鼠标按键路由到 rhpB，修饰键由 PreClick 脚本动态检测
-            -- [btn:2] → 右键（路由到 PreClick 判断是 Dalaran 还是修饰键绑定）
-            -- [btn:3] → 中键（路由到 PreClick 判断是 Garrison 还是修饰键绑定）
-            -- rhpB   → 默认左键（路由到 PreClick 判断是随机玩具还是修饰键绑定）
+            -- #showtooltip 根据按下的修饰键动态显示对应绑定物品的图标
+            local stt = buildShowtooltip()
             if playerClass == 11 then
                 -- 德鲁伊：需要 /cancelform 来在施放炉石前取消变形形态
-                macroText = "#showtooltip " .. macroToyName
+                macroText = stt
                     .. "\n/cancelform"
                     .. "\n/stopcasting"
                     .. "\n/click [btn:2]rhpB 2;[btn:3]rhpB 3;rhpB"
             else
                 -- 非德鲁伊：只需要 /stopcasting
-                macroText = "#showtooltip " .. macroToyName
+                macroText = stt
                     .. "\n/stopcasting"
                     .. "\n/click [btn:2]rhpB 2;[btn:3]rhpB 3;rhpB"
             end
