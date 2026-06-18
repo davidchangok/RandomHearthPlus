@@ -148,6 +148,7 @@
 | 253629 | 奥秘私钥 | Private Key of the Arcanum |
 | 243056 | 探索者的虚灵跃迁门 | Delver's Ethereal Warp Gate |
 | 230850 | 探索者的机器人 7001 | Delver's Robot 7001 |
+| 276371 | 光帷召回道标 | Shrouded Summoner's Beacon |
 
 ---
 
