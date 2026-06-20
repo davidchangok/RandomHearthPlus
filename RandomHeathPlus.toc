@@ -1,4 +1,4 @@
-## Interface: 120005
+## Interface: 120007
 ## Title: Random Hearthstone Plus
 ## Author: David W Zhang
 ## Version: 1.0.0

@@ -6,7 +6,7 @@ Random Hearthstone Plus（随机炉石增强版）
 新增功能：
   - 传送玩具支持（Teleport Toys）
   - 修饰键绑定（Shift / Ctrl / Alt × 左键 / 右键 / 中键，共 9 种组合）
-  - 完整兼容 WoW 12.0.5 API
+  - 完整兼容 WoW 12.0.7 API
 
 如果有新的炉石玩具或传送玩具发布，只需将其 ItemID 添加到下方的 rhToys 列表中即可。
 ItemID 可以从 Wowhead.com 物品页面的 URL 中获取（例如 item=123456 → 123456）。
