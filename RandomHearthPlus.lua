@@ -210,6 +210,10 @@ end
 -- 在点击发生前，根据当前按下的修饰键和按键，设置对应的动作类型和参数
 -- 这样 rhpB 始终使用 "type"/"toy"/"item" 属性，但值每次动态切换
 local function rhpPreClick(self, button, isDown)
+    if combatCheck() then
+        return
+    end
+
     -- 判断当前按下的修饰键
     local heldMod = nil
     if IsShiftKeyDown() then
